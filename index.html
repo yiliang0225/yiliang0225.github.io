@@ -70,7 +70,7 @@
 			</ul>
 		</nav>
 <!--		<nav>
-			总字数 <span class="post-count">75</span>
+			总字数 <span class="post-count">1.5k</span>
 		</nav>		-->
 
 		<br>
@@ -159,47 +159,96 @@
           <div id="js-content" class="content-ll">
             
   
-    <article id="post-hello-world" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+    <article id="post-RabbitMQ 如何保证消息的可靠传输" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2022/03/03/hello-world/">Hello World</a>
+      <a class="article-title_code_ant" href="/2020/07/11/RabbitMQ%20%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E6%B6%88%E6%81%AF%E7%9A%84%E5%8F%AF%E9%9D%A0%E4%BC%A0%E8%BE%93/">RabbitMQ 如何保证消息的可靠传输</a>
     </h1>
   
 
         
-        <a href="/2022/03/03/hello-world/" class="archive-article-date">
-  	<time datetime="2022-03-03T08:05:56.010Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2022-03-03</time>
+        <a href="/2020/07/11/RabbitMQ%20%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E6%B6%88%E6%81%AF%E7%9A%84%E5%8F%AF%E9%9D%A0%E4%BC%A0%E8%BE%93/" class="archive-article-date">
+  	<time datetime="2020-07-10T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-07-11</time>
 </a>
 
 
         
       </header>
+          <hr>
+          
+          
+              <div class="declare" hidden="hidden"></div>
+          
+
+          <br>
           <div align="center" class="post-count">
-              字数：75字 | 预计阅读时长：1分钟
+              字数：1.5k字 | 预计阅读时长：5分钟
           </div>
+            <br>
     
     <div class="article-entry" itemprop="articleBody">
-      
-        <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
         
-          <a class="article-more-a" href="/2022/03/03/hello-world/#more">all >></a>
+
+        
+
+
+      
+        <h4 id="可靠传输"><a href="#可靠传输" class="headerlink" title="可靠传输"></a>可靠传输</h4><p>在RabbitMQ中，一个消息从产生到被消费大致会经过三个步骤，生产者生产消息，消息投递到RabbitMQ，RabbitMQ再将消息推送到消费者（或消费者拉取），最终消费者将这条消息成功消费。消息的可靠传输，就是确保消息能够百分百从生产者发送到服务器，在从服务器发送到消费者。</p>
+<p>所以消息丢失也可以划分为三种情况——生产者、消息队列、消费者。</p>
+        
+          <a class="article-more-a" href="/2020/07/11/RabbitMQ%20%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E6%B6%88%E6%81%AF%E7%9A%84%E5%8F%AF%E9%9D%A0%E4%BC%A0%E8%BE%93/#more">展开全文 >></a>
         
       
+
+
+
+
+
 
       
     </div>
     <div class="article-info article-info-index">
       
       
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">RabbitMQ</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">学习笔记</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
       
+	<div class="article-category tagcloud">
+		<i class="icon-book icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="/categories/RabbitMQ//" class="article-tag-list-link color4">RabbitMQ</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="/categories/RabbitMQ/可靠传输//" class="article-tag-list-link color5">可靠传输</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
 
       
         <p class="article-more-link">
-          <a class="article-more-a" href="/2022/03/03/hello-world/">展开全文 >></a>
+          <a class="article-more-a" href="/2020/07/11/RabbitMQ%20%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E6%B6%88%E6%81%AF%E7%9A%84%E5%8F%AF%E9%9D%A0%E4%BC%A0%E8%BE%93/">展开全文 >></a>
         </p>
       
 
@@ -320,6 +369,14 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           </label>
           <ul class="article-tag-list" q-show="showTags">
             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">RabbitMQ</a>
+              </li>
+            
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">学习笔记</a>
+              </li>
+            
             <div class="clearfix"></div>
           </ul>
         </div>
@@ -368,13 +425,14 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
     
     	<section class="tools-section tools-section-me" q-show="aboutme">
   	  	
-  	  		<div class="aboutme-wrap" id="js-aboutme">很惭愧&lt;br&gt;&lt;br&gt;只做了一点微小的工作&lt;br&gt;谢谢大家</div>
+  	  		<div class="aboutme-wrap" id="js-aboutme">很惭愧   只做了一点微小的工作  谢谢大家</div>
   	  	
     	</section>
     
   </div>
-  
+
 </div>
+
     <!-- Root element of PhotoSwipe. Must have class pswp. -->
 <div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
 

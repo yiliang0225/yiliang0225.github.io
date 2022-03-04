@@ -6,14 +6,20 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://example.com">
-  <title>Archives: 2022/3 | YiLiAng</title>
+  <title>RabbitMQ 如何保证消息的可靠传输 | YiLiAng</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="YiLiAng">
-<meta property="og:url" content="http://example.com/archives/2022/03/index.html">
+  <meta name="description" content="可靠传输在RabbitMQ中，一个消息从产生到被消费大致会经过三个步骤，生产者生产消息，消息投递到RabbitMQ，RabbitMQ再将消息推送到消费者（或消费者拉取），最终消费者将这条消息成功消费。消息的可靠传输，就是确保消息能够百分百从生产者发送到服务器，在从服务器发送到消费者。 所以消息丢失也可以划分为三种情况——生产者、消息队列、消费者。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RabbitMQ 如何保证消息的可靠传输">
+<meta property="og:url" content="http://example.com/2020/07/11/RabbitMQ%20%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E6%B6%88%E6%81%AF%E7%9A%84%E5%8F%AF%E9%9D%A0%E4%BC%A0%E8%BE%93/index.html">
 <meta property="og:site_name" content="YiLiAng">
+<meta property="og:description" content="可靠传输在RabbitMQ中，一个消息从产生到被消费大致会经过三个步骤，生产者生产消息，消息投递到RabbitMQ，RabbitMQ再将消息推送到消费者（或消费者拉取），最终消费者将这条消息成功消费。消息的可靠传输，就是确保消息能够百分百从生产者发送到服务器，在从服务器发送到消费者。 所以消息丢失也可以划分为三种情况——生产者、消息队列、消费者。">
 <meta property="og:locale" content="zh_CN">
+<meta property="article:published_time" content="2020-07-10T16:00:00.000Z">
+<meta property="article:modified_time" content="2022-03-04T03:56:11.488Z">
 <meta property="article:author" content="Liang">
+<meta property="article:tag" content="RabbitMQ">
+<meta property="article:tag" content="学习笔记">
 <meta name="twitter:card" content="summary">
   
     <link rel="alternative" href="/atom.xml" title="YiLiAng" type="application/atom+xml">
@@ -70,7 +76,7 @@
 			</ul>
 		</nav>
 <!--		<nav>
-			总字数 <span class="post-count">75</span>
+			总字数 <span class="post-count">1.5k</span>
 		</nav>		-->
 
 		<br>
@@ -157,51 +163,221 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            
-  
-  
+            <article id="post-RabbitMQ 如何保证消息的可靠传输" class="article article-type-post " itemscope itemprop="blogPost">
+  <div class="article-inner">
     
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/archives/2022" class="archive-year">2022</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      	<div class="article-meta">
-	      	<a href="/2022/03/03/hello-world/" class="archive-article-date">
-  	<time datetime="2022-03-03T08:05:56.010Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2022-03-03</time>
-</a>
-
-
-        </div>
-    	 
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/2022/03/03/hello-world/">Hello World</a>
+    <h1 class="article-title_code_ant" itemprop="name">
+      RabbitMQ 如何保证消息的可靠传输
     </h1>
   
 
-        <div class="article-info info-on-right">
+        
+        <a href="/2020/07/11/RabbitMQ%20%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E6%B6%88%E6%81%AF%E7%9A%84%E5%8F%AF%E9%9D%A0%E4%BC%A0%E8%BE%93/" class="archive-article-date">
+  	<time datetime="2020-07-10T16:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2020-07-11</time>
+</a>
+
+
+        
+      </header>
+          <hr>
           
+          
+              <div class="declare">
+                  &nbsp;&nbsp;
+                  <strong>本文作者：</strong>
+                  
+                      Liang
+                  
+              </div>
           
 
+          <br>
+          <div align="center" class="post-count">
+              字数：1.5k字 | 预计阅读时长：5分钟
+          </div>
+            <br>
+    
+    <div class="article-entry" itemprop="articleBody">
+        
+
+        
+
+
+      
+        <h4 id="可靠传输"><a href="#可靠传输" class="headerlink" title="可靠传输"></a>可靠传输</h4><p>在RabbitMQ中，一个消息从产生到被消费大致会经过三个步骤，生产者生产消息，消息投递到RabbitMQ，RabbitMQ再将消息推送到消费者（或消费者拉取），最终消费者将这条消息成功消费。消息的可靠传输，就是确保消息能够百分百从生产者发送到服务器，在从服务器发送到消费者。</p>
+<p>所以消息丢失也可以划分为三种情况——生产者、消息队列、消费者。</p>
+<span id="more"></span>
+
+<h4 id="生产者投递消息失败"><a href="#生产者投递消息失败" class="headerlink" title="生产者投递消息失败"></a>生产者投递消息失败</h4><h5 id="事务机制"><a href="#事务机制" class="headerlink" title="事务机制"></a>事务机制</h5><p>使用 RabbitMQ 的事务功能，此时可以选择用 RabbitMQ 提供的事务功能，就是生产者发送数据之前开启 RabbitMQ 事务 channel.txSelect，然后发送消息，如果消息没有成功被 RabbitMQ 接收到，那么生产者会收到异常报错，此时就可以回滚事务 channel.txRollback，然后重试发送消息；如果收到了消息，那么可以提交事务 channel.txCommit。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">`<span class="comment">// 开启事务`</span></span><br><span class="line">`channel.txSelect();`</span><br><span class="line">`<span class="keyword">try</span> &#123;`</span><br><span class="line">    `<span class="comment">// 发送消息`</span></span><br><span class="line">`&#125; <span class="keyword">catch</span>(Exception e) &#123;`</span><br><span class="line">    `channel.txRollback();`</span><br><span class="line">	`<span class="comment">// 重发消息`</span></span><br><span class="line">`&#125;`</span><br><span class="line">`<span class="comment">// 提交事务`</span></span><br><span class="line">`channel.txCommit();`</span><br></pre></td></tr></table></figure>
+
+<p>事务机制可以确保生产者投递消息成功，但是这种方式有比较大的缺点，太耗性能。</p>
+<h5 id="confirm机制"><a href="#confirm机制" class="headerlink" title="confirm机制"></a>confirm机制</h5><p>要确保 RabbitMQ 生产者的消息正确投递，可以开启 confirm 模式，在生产者端设置开启 confirm 模式之后，你每次写的消息都会分配一个唯一的 id，然后如果写入了 RabbitMQ 中，RabbitMQ 会给你回传一个 ACK 消息，告诉你说这个消息。</p>
+<p>如果 RabbitMQ 没能处理这个消息，会回调你一个 nack 接口，告诉你这个消息接收失败，你可以重试。而且你可以结合这个机制自己在内存里维护每个消息 id 的状态，如果超过一定时间还没接收到这个消息的回调，那么你可以重发。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    channel.confirmSelect(); <span class="comment">//将信道置为 publisher confirm 模式</span></span><br><span class="line">    <span class="comment">// 之后正常发送消息</span></span><br><span class="line">    channel.basicPushlish(<span class="string">&quot;exchange&quot;</span>, <span class="string">&quot;routingKey&quot;</span>, <span class="literal">null</span>, </span><br><span class="line">                          <span class="string">&quot;publisher confirm test&quot;</span>.getBytes());</span><br><span class="line">    <span class="keyword">if</span> (!channel.waitFormConfirms()) &#123;</span><br><span class="line">        System.out.println(<span class="string">&quot;Send message failed&quot;</span>);</span><br><span class="line">    	<span class="comment">// do something else...</span></span><br><span class="line">    &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>事务机制和 confirm 机制最大的不同在于，事务机制是同步的，你提交一个事务之后会阻塞在那儿，但是 confirm 机制是异步的，你发送个消息之后就可以发送下一个消息，然后那个消息 RabbitMQ 接收之后会异步回调你一个接口通知你这个消息接收到了。</p>
+<p>所以一般生产者到 RabbitMQ 这块避免数据丢失，会采用 confirm 机制更多些。</p>
+<h5 id="消息队列自身丢失"><a href="#消息队列自身丢失" class="headerlink" title="消息队列自身丢失"></a>消息队列自身丢失</h5><p>就是 RabbitMQ 自己弄丢了数据，这个你必须开启 RabbitMQ 的持久化，就是消息写入之后会持久化到磁盘，哪怕是 RabbitMQ 自己挂了，恢复之后会自动读取之前存储的数据，一般数据不会丢。除非极其罕见的是，RabbitMQ 还没持久化，自己就挂了，可能导致少量数据丢失，但是这个概率较小。</p>
+<p>设置持久化有两个步骤：</p>
+<ul>
+<li><strong>创建 queue 的时候将其设置为持久化</strong></li>
+</ul>
+<p>这样就可以保证 RabbitMQ 持久化 queue 的元数据，但是不会持久化 queue 里的数据。</p>
+<ul>
+<li><strong>发送消息时将消息的 deliveryMode 设置为 2</strong></li>
+</ul>
+<p>就是将消息设置为持久化，此时 RabbitMQ 就会将消息持久化到磁盘上去。</p>
+<p>必须要同时设置这两个持久化才行，RabbitMQ 哪怕是挂了，再次重启，也会从磁盘上重启恢复 queue，恢复这个 queue 里的数据。</p>
+<p>同时持久化也可以跟生产者那边的 confirm 机制配合起来，只有消息被持久化到磁盘后，才会通知生产者 ack 了，所以哪怕是在持久化到磁盘之前，RabbitMQ 挂了，数据丢了，生产者收不到 ACK，你也是可以自己重发的。</p>
+<p>注意，哪怕是你给 RabbitMQ 开启了持久化机制，也有一种可能，就是这个消息写到了 RabbitMQ 中，但是还没来得及持久化到磁盘上，结果不巧，此时 RabbitMQ 挂了，就会导致内存中的数据丢失。</p>
+<h5 id="消费者宕机"><a href="#消费者宕机" class="headerlink" title="消费者宕机"></a>消费者宕机</h5><p>对于消费者端所产生的情况就是：消费者成功接收到消息，但是还未将消息处理完毕就宕机了。针对这种情况，可以利用 RabbitMQ 提供的<strong>消息确认机制</strong>。</p>
+<p>为了保证消息从队列可靠地到达消费者，RabbitMQ 提供了消息确认机制（message acknowledgement）。消费者在订阅队列时，可以指定 autoAck 参数：</p>
+<ul>
+<li><p>当 autoAck 等于 true 时，RabbitMQ 会自动把发送出去的消息置为确认，然后从内存（或者磁盘）中删除，而不管消费者是否真正地消费到了这些消息；</p>
+</li>
+<li><p>当 autoAck 等于 false 时，RabbitMQ 会等待消费者显示地回复确认信号后才从内存（后者磁盘）中移去消息（实质上是先打上删除标记，之后再删除）。</p>
+</li>
+</ul>
+<p>所以对于消费者可能发生宕机地情况，我们可以将 autoAck 参数置为 false，消费者就有足够的时间处理这条消息，不用担心处理消息过程中消费者进程挂掉后消息丢失的问题，因为 RabbitMQ 会一直等待并且持有这条消息，直到消费者显示调用 Basic.Ack 命令为止。</p>
+<p>当 autoAck 参数设置为 false，对于 RabbitMQ 服务端而言，队列中的消息分成了两个部分：一部分是等待投递给消费者的消息，另一部分是已经投递给消费者，但是还没有收到消费者确认信号的消息。如果 RabbitMQ 一直没有收到消费者的确认信号，并且消费此消息的消费者已经断开连接，则 RabbitMQ 会安排该消息重新进入队列，等待投递给下一个消费者，当然也可能还是原来的那个消费者。</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/Allen_Adolph/article/details/109055174">原文链接</a></p>
+
+      
+
+
+
+
+
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">RabbitMQ</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">学习笔记</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+	<div class="article-category tagcloud">
+		<i class="icon-book icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="/categories/RabbitMQ//" class="article-tag-list-link color4">RabbitMQ</a>
+        		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="/categories/RabbitMQ/可靠传输//" class="article-tag-list-link color5">可靠传输</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+
+      
+
+      
+        
+<div class="share-btn share-icons tooltip-left">
+  <div class="tooltip tooltip-east">
+    <span class="tooltip-item">
+      <a href="javascript:;" class="share-sns share-outer">
+        <i class="icon icon-share"></i>
+      </a>
+    </span>
+    <span class="tooltip-content">
+      <div class="share-wrap">
+        <div class="share-icons">
+          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
+            <i class="icon icon-weibo"></i>
+          </a>
+          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
+            <i class="icon icon-weixin"></i>
+          </a>
+          <a class="qq share-sns" href="javascript:;" data-type="qq">
+            <i class="icon icon-qq"></i>
+          </a>
+          <a class="douban share-sns" href="javascript:;" data-type="douban">
+            <i class="icon icon-douban"></i>
+          </a>
+          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
+            <i class="icon icon-qzone"></i>
+          </a>
+          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
+            <i class="icon icon-facebook"></i>
+          </a>
+          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
+            <i class="icon icon-twitter"></i>
+          </a>
+          <a class="google share-sns" href="javascript:;" data-type="google">
+            <i class="icon icon-google"></i>
+          </a>
         </div>
-        <div class="clearfix"></div>
-    </header>
+      </div>
+    </span>
+  </div>
+</div>
+
+<div class="page-modal wx-share js-wx-box">
+    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
+    <p>扫一扫，分享到微信</p>
+    <div class="wx-qrcode">
+      <img src="//pan.baidu.com/share/qrcode?url=http://example.com/2020/07/11/RabbitMQ%20%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E6%B6%88%E6%81%AF%E7%9A%84%E5%8F%AF%E9%9D%A0%E4%BC%A0%E8%BE%93/" alt="微信分享二维码">
+    </div>
+</div>
+
+<div class="mask js-mask"></div>
+      
+      <div class="clearfix"></div>
+    </div>
   </div>
 </article>
-  
-  
-    </div></section>
+
   
 
-    
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
 
 
           </div>
@@ -227,8 +403,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: false,
-		isArchive: true,
+		isPost: true,
+		isArchive: false,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
@@ -292,6 +468,14 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           </label>
           <ul class="article-tag-list" q-show="showTags">
             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">RabbitMQ</a>
+              </li>
+            
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">学习笔记</a>
+              </li>
+            
             <div class="clearfix"></div>
           </ul>
         </div>
@@ -340,13 +524,14 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
     
     	<section class="tools-section tools-section-me" q-show="aboutme">
   	  	
-  	  		<div class="aboutme-wrap" id="js-aboutme">很惭愧&lt;br&gt;&lt;br&gt;只做了一点微小的工作&lt;br&gt;谢谢大家</div>
+  	  		<div class="aboutme-wrap" id="js-aboutme">很惭愧   只做了一点微小的工作  谢谢大家</div>
   	  	
     	</section>
     
   </div>
-  
+
 </div>
+
     <!-- Root element of PhotoSwipe. Must have class pswp. -->
 <div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
 
