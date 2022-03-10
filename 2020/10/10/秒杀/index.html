@@ -201,13 +201,6 @@
         </li>
         
         
-        <li><div class="divider"></div></li>
-        <li>
-            <a href="https://github.com/blinkfox/hexo-theme-matery" class="waves-effect waves-light" target="_blank">
-                <i class="fab fa-github-square fa-fw"></i>Fork Me
-            </a>
-        </li>
-        
     </ul>
 </div>
 
@@ -406,6 +399,11 @@
         
 
         
+        <!-- 代码块折行 -->
+        <style type="text/css">
+            code[class*="language-"], pre[class*="language-"] { white-space: pre-wrap !important; }
+        </style>
+        
 
         <div class="card-content article-card-content">
             <div id="articleContent">
@@ -416,20 +414,190 @@
 <p>超卖问题：<br>数据库添加唯一索引，减库存的时候先进行库存数量判断；用redis来维护库存，redis中的库存不足则秒杀失败；异步队列处理订单。  </p>
 <span id="more"></span>
 <h2 id="二、缓存"><a href="#二、缓存" class="headerlink" title="二、缓存"></a>二、缓存</h2><p>在高并发的情况下必然会遇到<strong>缓存雪崩</strong>、<strong>缓存击穿</strong>、<strong>缓存穿透</strong>等问题。而且秒杀是<strong>读多写少</strong>，使用redis作为缓存非常合适（为了避免redis服务器出问题，可以使用redis集群）。  </p>
-<h3 id="2-1、缓存穿透"><a href="#2-1、缓存穿透" class="headerlink" title="2.1、缓存穿透"></a>2.1、缓存穿透</h3><figure class="highlight plaintext"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">描述：</span><br><span class="line">是指缓存和数据库中没有数据，而用户不断请求，会导致数据库压力过大</span><br><span class="line">解决方案：  </span><br><span class="line">1、在接口层校验，如果用户鉴权校验，id为基础校验，id&lt;=0的直接拦截</span><br><span class="line">2、从缓存取不到数据，在数据库中也没有取到，可以将key-value对写成key-null，将缓存有效时间可以设置短点，设置太长会导致无法正常使用。</span><br></pre></td></tr></tbody></table></figure>
-<h3 id="2-2、缓存击穿"><a href="#2-2、缓存击穿" class="headerlink" title="2.2、缓存击穿"></a>2.2、缓存击穿</h3><figure class="highlight plaintext"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">描述：</span><br><span class="line">是指缓存中没有数据但是数据库中有数据（一般是缓存时间到期），这是由于并发用户特别多，同时读缓存没有读到数据，有同时去请求数据库，引起数据库压力瞬间增大。</span><br><span class="line">解决方案：</span><br><span class="line">1、设置热点永不过期</span><br><span class="line">2、加互斥锁</span><br></pre></td></tr></tbody></table></figure>
-<figure class="highlight plaintext"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">public String getData(String key) throws InterruptedException {</span><br><span class="line">    // 创建锁</span><br><span class="line">    ReentrantLock reenLock = new ReentrantLock();</span><br><span class="line">    // 从缓存中读取数据</span><br><span class="line">    String result = getDataFromRedis(key);</span><br><span class="line">    // 缓存中不存在数据</span><br><span class="line">    if (result == null){</span><br><span class="line">        // 获取锁，获取成功去数据库中取数据</span><br><span class="line">        if (reenLock.tryLock()){</span><br><span class="line">            // 从数据库获取数据</span><br><span class="line">            result = getDataFromMysql(key);</span><br><span class="line">            // 更新缓存</span><br><span class="line">            if (result != null){</span><br><span class="line">                setDataToCache(key,result);</span><br><span class="line">            }</span><br><span class="line">            // 释放锁</span><br><span class="line">            reenLock.unlock();</span><br><span class="line">        }else{</span><br><span class="line">            // 暂停一会，在重新去获取</span><br><span class="line">            Thread.sleep(100);</span><br><span class="line">            result = getData(key);</span><br><span class="line">        }</span><br><span class="line">    }</span><br><span class="line">    return result;</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure>
-<h3 id="2-3、缓存雪崩"><a href="#2-3、缓存雪崩" class="headerlink" title="2.3、缓存雪崩"></a>2.3、缓存雪崩</h3><pre><code>描述：
-    是指缓存中数据大量到过期时间，而查询数据量巨大，引起数据库压力过大甚至宕机
+<h3 id="2-1、缓存穿透"><a href="#2-1、缓存穿透" class="headerlink" title="2.1、缓存穿透"></a>2.1、缓存穿透</h3><pre><code>描述：
+是指缓存和数据库中没有数据，而用户不断请求，会导致数据库压力过大
+解决方案：  
+1、在接口层校验，如果用户鉴权校验，id为基础校验，id&lt;=0的直接拦截
+2、从缓存取不到数据，在数据库中也没有取到，可以将key-value对写成key-null，将缓存有效时间可以设置短点，设置太长会导致无法正常使用。
+</code></pre>
+<h3 id="2-2、缓存击穿"><a href="#2-2、缓存击穿" class="headerlink" title="2.2、缓存击穿"></a>2.2、缓存击穿</h3><pre><code>描述：
+是指缓存中没有数据但是数据库中有数据（一般是缓存时间到期），这是由于并发用户特别多，同时读缓存没有读到数据，有同时去请求数据库，引起数据库压力瞬间增大。
 解决方案：
-    1、缓存数据的过期时间设置随机，防止同一时间大量数据过期。
-    2、缓存数据库是分布式部署，将热点数据均匀分布不同缓存数据库中
-    3、设置热点数据永不过期
+1、设置热点永不过期
+2、加互斥锁
+</code></pre>
+<pre><code>    public String getData(String key) throws InterruptedException {
+        // 创建锁
+        ReentrantLock reenLock = new ReentrantLock();
+        // 从缓存中读取数据
+        String result = getDataFromRedis(key);
+        // 缓存中不存在数据
+        if (result == null){
+            // 获取锁，获取成功去数据库中取数据
+            if (reenLock.tryLock()){
+                // 从数据库获取数据
+                result = getDataFromMysql(key);
+                // 更新缓存
+                if (result != null){
+                    setDataToCache(key,result);
+                }
+                // 释放锁
+                reenLock.unlock();
+            }else{
+                // 暂停一会，在重新去获取
+                Thread.sleep(100);
+                result = getData(key);
+            }
+        }
+        return result;
+    }
+</code></pre>
+<h3 id="2-3、缓存雪崩"><a href="#2-3、缓存雪崩" class="headerlink" title="2.3、缓存雪崩"></a>2.3、缓存雪崩</h3><pre><code>描述：
+是指缓存中数据大量到过期时间，而查询数据量巨大，引起数据库压力过大甚至宕机  
+解决方案：  
+1、缓存数据的过期时间设置随机，防止同一时间大量数据过期。  
+2、缓存数据库是分布式部署，将热点数据均匀分布不同缓存数据库中  
+3、设置热点数据永不过期
 </code></pre>
 <h2 id="三、削峰-x2F-限流"><a href="#三、削峰-x2F-限流" class="headerlink" title="三、削峰/限流"></a>三、削峰/限流</h2><p>秒杀流量在某一时刻非常高，让瞬间进来的流量进到一个缓存池，然后进行平缓处理（mq消息队列处理）。</p>
-<figure class="highlight plaintext"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br></pre></td><td class="code"><pre><span class="line">@Configuration</span><br><span class="line">public class RabbitConfig {</span><br><span class="line"></span><br><span class="line">    private static final Logger logger = LoggerFactory.getLogger(RabbitConfig.class);</span><br><span class="line">    // 交换机</span><br><span class="line">    public final static String EXCHANGE_NAME = "order:mq:exchange";</span><br><span class="line">    // 队列</span><br><span class="line">    public final static String QUEUE_NAME = "order:mq:queue";</span><br><span class="line">    // 路由键</span><br><span class="line">    public final static String ROUTING_KEY = "order:mq:routing:key";</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * channel链接工厂</span><br><span class="line">     */</span><br><span class="line">    @Autowired</span><br><span class="line">    private CachingConnectionFactory connectionFactory;</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 监听器容器配置</span><br><span class="line">     */</span><br><span class="line">    @Autowired</span><br><span class="line">    private SimpleRabbitListenerContainerFactoryConfigurer factoryConfigurer;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 声明rabbittemplate</span><br><span class="line">     * @return</span><br><span class="line">     */</span><br><span class="line">    @Bean</span><br><span class="line">    public RabbitTemplate rabbitTemplate(){</span><br><span class="line">        //消息发送成功确认，对应application.properties中的spring.rabbitmq.publisher-confirms=true</span><br><span class="line">        connectionFactory.setPublisherConfirms(true);</span><br><span class="line">        //消息发送失败确认，对应application.properties中的spring.rabbitmq.publisher-returns=true</span><br><span class="line">        connectionFactory.setPublisherReturns(true);</span><br><span class="line">        RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);</span><br><span class="line">        //设置消息发送格式为json</span><br><span class="line">        rabbitTemplate.setMessageConverter(new Jackson2JsonMessageConverter());</span><br><span class="line">        rabbitTemplate.setMandatory(true);</span><br><span class="line">        //消息发送到exchange回调 需设置：spring.rabbitmq.publisher-confirms=true</span><br><span class="line">        rabbitTemplate.setConfirmCallback(new RabbitTemplate.ConfirmCallback() {</span><br><span class="line">            @Override</span><br><span class="line">            public void confirm(CorrelationData correlationData, boolean ack, String cause) {</span><br><span class="line">                logger.info("消息发送成功:correlationData({}),ack({}),cause({})",correlationData,ack,cause);</span><br><span class="line">            }</span><br><span class="line">        });</span><br><span class="line">        //消息从exchange发送到queue失败回调  需设置：spring.rabbitmq.publisher-returns=true</span><br><span class="line">        rabbitTemplate.setReturnCallback(new RabbitTemplate.ReturnCallback() {</span><br><span class="line">            @Override</span><br><span class="line">            public void returnedMessage(Message message, int replyCode, String replyText, String exchange, String routingKey) {</span><br><span class="line">                logger.info("消息丢失:exchange({}),route({}),replyCode({}),replyText({}),message:{}",exchange,routingKey,replyCode,replyText,message);</span><br><span class="line">            }</span><br><span class="line">        });</span><br><span class="line">        return rabbitTemplate;</span><br><span class="line">    }</span><br><span class="line"></span><br><span class="line">    //---------------------------------------订单队列------------------------------------------------------</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 声明订单队列的交换机</span><br><span class="line">     * @return</span><br><span class="line">     */</span><br><span class="line">    @Bean</span><br><span class="line">    public TopicExchange orderTopicExchange(){</span><br><span class="line">        //设置为持久化 不自动删除</span><br><span class="line">        return new TopicExchange(EXCHANGE_NAME,true,false);</span><br><span class="line">    }</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 声明订单队列</span><br><span class="line">     * @return</span><br><span class="line">     */</span><br><span class="line">    @Bean</span><br><span class="line">    public Queue orderQueue(){</span><br><span class="line">        return new Queue(QUEUE_NAME,true);</span><br><span class="line">    }</span><br><span class="line"></span><br><span class="line">    /**</span><br><span class="line">     * 将队列绑定到交换机</span><br><span class="line">     * @return</span><br><span class="line">     */</span><br><span class="line">    @Bean</span><br><span class="line">    public Binding simpleBinding(){</span><br><span class="line">        return BindingBuilder.bind(orderQueue()).to(orderTopicExchange()).with(ROUTING_KEY);</span><br><span class="line">    }</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure>
-<figure class="highlight plaintext"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">// 生产消息</span><br><span class="line">public String send(String message){</span><br><span class="line">    rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE_NAME,RabbitConfig.ROUTING_KEY,message);</span><br><span class="line">    retuen "消息发送成功";</span><br><span class="line">}</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">// 配置rabbitmq监听</span><br><span class="line">/**</span><br><span class="line"> * 处理接收到的消息</span><br><span class="line"> * @param message 消息体</span><br><span class="line"> * @param channel 通道，确认消费用</span><br><span class="line"> */</span><br><span class="line">@RabbitListener(queues = RabbitConfig.QUEUE_NAME)</span><br><span class="line">public void onMessage(Message message, com.rabbitmq.client.Channel channel){</span><br><span class="line">    try{</span><br><span class="line">        //获取交付tag</span><br><span class="line">        long tag = message.getMessageProperties().getDeliveryTag();</span><br><span class="line">        String str = new String(message.getBody(),"utf-8");</span><br><span class="line">        logger.info("接收到的消息：{}",str);</span><br><span class="line">        //确认消费</span><br><span class="line">        channel.basicAck(tag,true);</span><br><span class="line">    }catch(Exception e){</span><br><span class="line">        logger.error("消息监听确认机制发生异常：",e.fillInStackTrace());</span><br><span class="line">    }</span><br><span class="line">}</span><br></pre></td></tr></tbody></table></figure>
-<h3 id="并发配置"><a href="#并发配置" class="headerlink" title="并发配置"></a>并发配置</h3><figure class="highlight plaintext"><table><tbody><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line">   * 容器工厂配置 并发</span><br><span class="line">   * @return</span><br><span class="line">*/</span><br><span class="line">@Bean("containerFactory")</span><br><span class="line">public RabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory connectionFactory){</span><br><span class="line">    SimpleRabbitListenerContainerFactory listenerContainerFactory = new SimpleRabbitListenerContainerFactory();</span><br><span class="line">    listenerContainerFactory.setConnectionFactory(connectionFactory);</span><br><span class="line">    listenerContainerFactory.setMessageConverter(new Jackson2JsonMessageConverter());</span><br><span class="line">    // 最大并发数</span><br><span class="line">    listenerContainerFactory.setMaxConcurrentConsumers(20);</span><br><span class="line">    // 初始并发数</span><br><span class="line">    listenerContainerFactory.setConcurrentConsumers(10);</span><br><span class="line">    return listenerContainerFactory;</span><br><span class="line">}</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">// containerFactory 指定容器工厂</span><br><span class="line"></span><br><span class="line">@RabbitListener(queues = RabbitConfig.QUEUE_NAME,containerFactory = "containerFactory")</span><br><span class="line">   </span><br></pre></td></tr></tbody></table></figure>
+<pre><code>@Configuration
+public class RabbitConfig {
+
+    private static final Logger logger = LoggerFactory.getLogger(RabbitConfig.class);
+    // 交换机
+    public final static String EXCHANGE_NAME = "order:mq:exchange";
+    // 队列
+    public final static String QUEUE_NAME = "order:mq:queue";
+    // 路由键
+    public final static String ROUTING_KEY = "order:mq:routing:key";
+
+
+
+    /**
+     * channel链接工厂
+     */
+    @Autowired
+    private CachingConnectionFactory connectionFactory;
+
+    /**
+     * 监听器容器配置
+     */
+    @Autowired
+    private SimpleRabbitListenerContainerFactoryConfigurer factoryConfigurer;
+
+
+    /**
+     * 声明rabbittemplate
+     * @return
+     */
+    @Bean
+    public RabbitTemplate rabbitTemplate(){
+        //消息发送成功确认，对应application.properties中的spring.rabbitmq.publisher-confirms=true
+        connectionFactory.setPublisherConfirms(true);
+        //消息发送失败确认，对应application.properties中的spring.rabbitmq.publisher-returns=true
+        connectionFactory.setPublisherReturns(true);
+        RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
+        //设置消息发送格式为json
+        rabbitTemplate.setMessageConverter(new Jackson2JsonMessageConverter());
+        rabbitTemplate.setMandatory(true);
+        //消息发送到exchange回调 需设置：spring.rabbitmq.publisher-confirms=true
+        rabbitTemplate.setConfirmCallback(new RabbitTemplate.ConfirmCallback() {
+            @Override
+            public void confirm(CorrelationData correlationData, boolean ack, String cause) {
+                logger.info("消息发送成功:correlationData({}),ack({}),cause({})",correlationData,ack,cause);
+            }
+        });
+        //消息从exchange发送到queue失败回调  需设置：spring.rabbitmq.publisher-returns=true
+        rabbitTemplate.setReturnCallback(new RabbitTemplate.ReturnCallback() {
+            @Override
+            public void returnedMessage(Message message, int replyCode, String replyText, String exchange, String routingKey) {
+                logger.info("消息丢失:exchange({}),route({}),replyCode({}),replyText({}),message:{}",exchange,routingKey,replyCode,replyText,message);
+            }
+        });
+        return rabbitTemplate;
+    }
+
+    //---------------------------------------订单队列------------------------------------------------------
+
+    /**
+     * 声明订单队列的交换机
+     * @return
+     */
+    @Bean
+    public TopicExchange orderTopicExchange(){
+        //设置为持久化 不自动删除
+        return new TopicExchange(EXCHANGE_NAME,true,false);
+    }
+
+    /**
+     * 声明订单队列
+     * @return
+     */
+    @Bean
+    public Queue orderQueue(){
+        return new Queue(QUEUE_NAME,true);
+    }
+
+    /**
+     * 将队列绑定到交换机
+     * @return
+     */
+    @Bean
+    public Binding simpleBinding(){
+        return BindingBuilder.bind(orderQueue()).to(orderTopicExchange()).with(ROUTING_KEY);
+    }
+}
+</code></pre>
+<pre><code>    // 生产消息
+    public String send(String message){
+        rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE_NAME,RabbitConfig.ROUTING_KEY,message);
+        retuen "消息发送成功";
+    }
+    
+    
+
+    // 配置rabbitmq监听
+    /**
+     * 处理接收到的消息
+     * @param message 消息体
+     * @param channel 通道，确认消费用
+     */
+    @RabbitListener(queues = RabbitConfig.QUEUE_NAME)
+    public void onMessage(Message message, com.rabbitmq.client.Channel channel){
+        try{
+            //获取交付tag
+            long tag = message.getMessageProperties().getDeliveryTag();
+            String str = new String(message.getBody(),"utf-8");
+            logger.info("接收到的消息：{}",str);
+            //确认消费
+            channel.basicAck(tag,true);
+        }catch(Exception e){
+            logger.error("消息监听确认机制发生异常：",e.fillInStackTrace());
+        }
+    }
+</code></pre>
+<h3 id="并发配置"><a href="#并发配置" class="headerlink" title="并发配置"></a>并发配置</h3><pre><code>    /**
+       * 容器工厂配置 并发
+       * @return
+    */
+    @Bean("containerFactory")
+    public RabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory connectionFactory){
+        SimpleRabbitListenerContainerFactory listenerContainerFactory = new SimpleRabbitListenerContainerFactory();
+        listenerContainerFactory.setConnectionFactory(connectionFactory);
+        listenerContainerFactory.setMessageConverter(new Jackson2JsonMessageConverter());
+        // 最大并发数
+        listenerContainerFactory.setMaxConcurrentConsumers(20);
+        // 初始并发数
+        listenerContainerFactory.setConcurrentConsumers(10);
+        return listenerContainerFactory;
+    }
+    
+    
+    // containerFactory 指定容器工厂
+    
+    @RabbitListener(queues = RabbitConfig.QUEUE_NAME,containerFactory = "containerFactory")
+   
+</code></pre>
 
                 
             </div>
@@ -651,47 +819,294 @@
     </div>
 
     
-        <link rel="stylesheet" href="/libs/gitalk/gitalk.css">
-<link rel="stylesheet" href="/css/my-gitalk.css">
 
-<div class="card gitalk-card" data-aos="fade-up">
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+        <style>
+    .twikoo-card {
+        margin: 1.5rem auto;
+    }
+
+    .twikoo-card .card-content {
+        padding: 20px;
+    }
+
+    #tcomments textarea {
+        box-sizing: border-box;
+        background: url("/") 100% 100% no-repeat;
+    }
+
+    #tcomments p {
+        margin: 2px 2px 10px;
+        font-size: 1.05rem;
+        line-height: 1.78rem;
+    }
+
+    #tcomments blockquote p {
+        text-indent: 0.2rem;
+    }
+
+    #tcomments a {
+        padding: 0 2px;
+        color: #4cbf30;
+        font-weight: 500;
+        text-decoration: none;
+    }
+
+    #tcomments img {
+        max-width: 100%;
+        height: auto;
+        cursor: pointer;
+    }
+
+    #tcomments ol li {
+        list-style-type: decimal;
+    }
+
+    #tcomments ol,
+    ul {
+        display: block;
+        padding-left: 2em;
+        word-spacing: 0.05rem;
+    }
+
+    #tcomments ul li,
+    ol li {
+        display: list-item;
+        line-height: 1.8rem;
+        font-size: 1rem;
+    }
+
+    #tcomments ul li {
+        list-style-type: disc;
+    }
+
+    #tcomments ul ul li {
+        list-style-type: circle;
+    }
+
+    #tcomments table,
+    th,
+    td {
+        padding: 12px 13px;
+        border: 1px solid #dfe2e5;
+    }
+
+    #tcomments table,
+    th,
+    td {
+        border: 0;
+    }
+
+    table tr:nth-child(2n),
+    thead {
+        background-color: #fafafa;
+    }
+
+    #tcomments table th {
+        background-color: #f2f2f2;
+        min-width: 80px;
+    }
+
+    #tcomments table td {
+        min-width: 80px;
+    }
+
+    #tcomments h1 {
+        font-size: 1.85rem;
+        font-weight: bold;
+        line-height: 2.2rem;
+    }
+
+    #tcomments h2 {
+        font-size: 1.65rem;
+        font-weight: bold;
+        line-height: 1.9rem;
+    }
+
+    #tcomments h3 {
+        font-size: 1.45rem;
+        font-weight: bold;
+        line-height: 1.7rem;
+    }
+
+    #tcomments h4 {
+        font-size: 1.25rem;
+        font-weight: bold;
+        line-height: 1.5rem;
+    }
+
+    #tcomments h5 {
+        font-size: 1.1rem;
+        font-weight: bold;
+        line-height: 1.4rem;
+    }
+
+    #tcomments h6 {
+        font-size: 1rem;
+        line-height: 1.3rem;
+    }
+
+    #tcomments p {
+        font-size: 1rem;
+        line-height: 1.5rem;
+    }
+
+    #tcomments hr {
+        margin: 12px 0;
+        border: 0;
+        border-top: 1px solid #ccc;
+    }
+
+    #tcomments blockquote {
+        margin: 15px 0;
+        border-left: 5px solid #42b983;
+        padding: 1rem 0.8rem 0.3rem 0.8rem;
+        color: #666;
+        background-color: rgba(66, 185, 131, .1);
+    }
+
+    #tcomments pre {
+        font-family: monospace, monospace;
+        padding: 1.2em;
+        margin: .5em 0;
+        background: #272822;
+        overflow: auto;
+        border-radius: 0.3em;
+        tab-size: 4;
+    }
+
+    #tcomments code {
+        font-family: monospace, monospace;
+        padding: 1px 3px;
+        font-size: 0.92rem;
+        color: #e96900;
+        background-color: #f8f8f8;
+        border-radius: 2px;
+    }
+
+    #tcomments pre code {
+        font-family: monospace, monospace;
+        padding: 0;
+        color: #e8eaf6;
+        background-color: #272822;
+    }
+
+    #tcomments pre[class*="language-"] {
+        padding: 1.2em;
+        margin: .5em 0;
+    }
+
+    #tcomments code[class*="language-"],
+    pre[class*="language-"] {
+        color: #e8eaf6;
+    }
+
+    #tcomments [type="checkbox"]:not(:checked),
+    [type="checkbox"]:checked {
+        position: inherit;
+        margin-left: -1.3rem;
+        margin-right: 0.4rem;
+        margin-top: -1px;
+        vertical-align: middle;
+        left: unset;
+        visibility: visible;
+    }
+
+    #tcomments b,
+    strong {
+        font-weight: bold;
+    }
+
+    #tcomments dfn {
+        font-style: italic;
+    }
+
+    #tcomments small {
+        font-size: 85%;
+    }
+
+    #tcomments cite {
+        font-style: normal;
+    }
+
+    #tcomments mark {
+        background-color: #fcf8e3;
+        padding: .2em;
+    }
+
+    #tcomments table,
+    th,
+    td {
+        padding: 12px 13px;
+        border: 1px solid #dfe2e5;
+    }
+
+    table tr:nth-child(2n),
+    thead {
+        background-color: #fafafa;
+    }
+
+    #tcomments table th {
+        background-color: #f2f2f2;
+        min-width: 80px;
+    }
+
+    #tcomments table td {
+        min-width: 80px;
+    }
+
+    #tcomments [type="checkbox"]:not(:checked),
+    [type="checkbox"]:checked {
+        position: inherit;
+        margin-left: -1.3rem;
+        margin-right: 0.4rem;
+        margin-top: -1px;
+        vertical-align: middle;
+        left: unset;
+        visibility: visible;
+    }
+</style>
+
+<div class="card twikoo-card" data-aos="fade-up">
     <div class="comment_headling" style="font-size: 20px; font-weight: 700; position: relative; padding-left: 20px; top: 15px; padding-bottom: 5px;">
         <i class="fas fa-comments fa-fw" aria-hidden="true"></i>
         <span>评论</span>
     </div>
-    <div id="gitalk-container" class="card-content"></div>
+    <div class="card-content" style="display: grid">
+        <div id="tcomments"></div>
+    </div>
 </div>
 
-<script src="/libs/gitalk/gitalk.min.js"></script>
+<script src="/libs/twikoo/twikoo.all.min.js"></script>
 <script>
-    let gitalk = new Gitalk({
-        clientID: '',
-        clientSecret: '',
-        repo: '',
-        owner: '',
-        admin: null,
-        id: '2020-10-10T00-00-00',
-        distractionFreeMode: false  // Facebook-like distraction free mode
+    twikoo.init({
+        envId: 'twikoo-1gs9l0fb17e7897a',
+        el: '#tcomments',
+        region: '',
+        path: ''
+    }).then(function () {
+        var tkInputs = document.querySelector('#twikoo').getElementsByTagName('input');
+        for (var tkInputsIndex = 0; tkInputsIndex < tkInputs.length; tkInputsIndex++) {
+            if (tkInputs[tkInputsIndex]) {
+                tkInputs[tkInputsIndex].classList.add('browser-default');
+            }
+        }
     });
-
-    gitalk.render('gitalk-container');
 </script>
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
-
-    
 
     
 
@@ -700,54 +1115,45 @@
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="far fa-dot-circle"></i>&nbsp;本篇
-            </div>
+                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2020/10/10/%E7%A7%92%E6%9D%80/">
+                <a href="/2021/03/10/Hexo%E5%8D%9A%E5%AE%A2%E6%90%AD%E5%BB%BA/">
                     <div class="card-image">
                         
+                        <img src="https://tse1-mm.cn.bing.net/th/id/R-C.1c5967becfe235d44defe968d7fadd59?rik=G91BNwdbYqmklA&riu=http%3a%2f%2fwww.962.net%2fup%2f2011-8%2f2011829263175.jpg&ehk=1NYDl9jj2PONaBFglQsSY%2bVWcxcttheXbHgzl6k93Xc%3d&risl=&pid=ImgRaw&r=0" class="responsive-img" alt="Hexo 博客搭建">
                         
-                        <img src="/medias/featureimages/10.jpg" class="responsive-img" alt="秒杀系统">
-                        
-                        <span class="card-title">秒杀系统</span>
+                        <span class="card-title">Hexo 博客搭建</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            一、设计库存预热：提前把商品添加到redis中，整个秒杀流程都在redis中操作，秒杀结束，在异步去修改库存。  
-用户下单：为了提升下单速度，将订单存放的redis中，用户支付后，再将订单存到mysql中，并清空redis中的订单。  
-
+                            
                         
                     </div>
                     <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2020-10-10
-                            </span>
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2021-03-10
+                        </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/%E7%A7%92%E6%9D%80/" class="post-category">
-                                    秒杀
+                            <a href="/categories/hexo/" class="post-category">
+                                    hexo
                                 </a>
                             
                             
                         </span>
                     </div>
                 </div>
-
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
-                        <span class="chip bg-color">学习笔记</span>
-                    </a>
-                    
-                    <a href="/tags/%E7%A7%92%E6%9D%80/">
-                        <span class="chip bg-color">秒杀</span>
+                    <a href="/tags/%E5%8D%9A%E5%AE%A2%E6%90%AD%E5%BB%BA/">
+                        <span class="chip bg-color">博客搭建</span>
                     </a>
                     
                 </div>
@@ -799,12 +1205,12 @@
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/RabbitMQ/">
-                        <span class="chip bg-color">RabbitMQ</span>
-                    </a>
-                    
                     <a href="/tags/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
                         <span class="chip bg-color">学习笔记</span>
+                    </a>
+                    
+                    <a href="/tags/RabbitMQ/">
+                        <span class="chip bg-color">RabbitMQ</span>
                     </a>
                     
                 </div>
@@ -824,17 +1230,21 @@
 
 <!-- 代码语言 -->
 
-<script type="text/javascript" src="/libs/codeBlock/codeLang.js"></script>
+    <script type="text/javascript" src="/libs/codeBlock/codeLang.js"></script>
 
 
 <!-- 代码块复制 -->
 
-<script type="text/javascript" src="/libs/codeBlock/codeCopy.js"></script>
+    <script type="text/javascript" src="/libs/codeBlock/codeCopy.js"></script>
 
 
 <!-- 代码块收缩 -->
 
-<script type="text/javascript" src="/libs/codeBlock/codeShrink.js"></script>
+    <script type="text/javascript" src="/libs/codeBlock/codeShrink.js"></script>
+
+
+<!-- 代码块折行 -->
+
 
 
     </div>
