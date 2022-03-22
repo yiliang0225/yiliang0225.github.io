@@ -5,10 +5,12 @@
 <head>
     <meta charset="utf-8">
     <meta name="keywords" content="Hexo 博客搭建, JAVA">
-    <meta name="description" content="安装Nodejsnode -v    #查看node版本
+    <meta name="description" content="
+
+安装Nodejsnode -v    #查看node版本
 npm -v    #查看npm版本
 
-安装淘宝 CNPMnpm install -g cnpm --registry=http://registry.npm.taobao.org ">
+安装淘宝 CNPMnpm install -g cnpm --registry=http://registry.npm.taobao.or">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -404,7 +406,9 @@ npm -v    #查看npm版本
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h2 id="安装Nodejs"><a href="#安装Nodejs" class="headerlink" title="安装Nodejs"></a>安装Nodejs</h2><pre><code>node -v    #查看node版本
+                <span id="more"></span>
+
+<h2 id="安装Nodejs"><a href="#安装Nodejs" class="headerlink" title="安装Nodejs"></a>安装Nodejs</h2><pre><code>node -v    #查看node版本
 npm -v    #查看npm版本
 </code></pre>
 <h3 id="安装淘宝-CNPM"><a href="#安装淘宝-CNPM" class="headerlink" title="安装淘宝 CNPM"></a>安装淘宝 CNPM</h3><pre><code>npm install -g cnpm --registry=http://registry.npm.taobao.org    #安装淘宝的cnpm 管理器
@@ -968,7 +972,7 @@ hexo d    #部署到远程Github仓库
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2021/05/10/redis/">
+                <a href="/2021/05/10/HashMap/">
                     <div class="card-image">
                         
                         
@@ -1002,12 +1006,12 @@ hexo d    #部署到远程Github仓库
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
-                        <span class="chip bg-color">学习笔记</span>
-                    </a>
-                    
                     <a href="/tags/HashMap/">
                         <span class="chip bg-color">HashMap</span>
+                    </a>
+                    
+                    <a href="/tags/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
+                        <span class="chip bg-color">学习笔记</span>
                     </a>
                     
                 </div>
@@ -1021,21 +1025,19 @@ hexo d    #部署到远程Github仓库
                 下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
-                <a href="/2020/10/10/%E7%A7%92%E6%9D%80/">
+                <a href="/2020/10/10/%E9%AB%98%E5%B9%B6%E5%8F%91%E4%B8%8B%E7%9A%84%E7%BC%93%E5%AD%98/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/10.jpg" class="responsive-img" alt="秒杀系统">
+                        <img src="/medias/featureimages/9.jpg" class="responsive-img" alt="高并发下的缓存">
                         
-                        <span class="card-title">秒杀系统</span>
+                        <span class="card-title">高并发下的缓存</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            一、设计库存预热：提前把商品添加到redis中，整个秒杀流程都在redis中操作，秒杀结束，在异步去修改库存。  
-用户下单：为了提升下单速度，将订单存放的redis中，用户支付后，再将订单存到mysql中，并清空redis中的订单。  
-
+                            
                         
                     </div>
                     <div class="publish-info">
@@ -1046,8 +1048,8 @@ hexo d    #部署到远程Github仓库
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/%E7%A7%92%E6%9D%80/" class="post-category">
-                                    秒杀
+                            <a href="/categories/%E7%BC%93%E5%AD%98/" class="post-category">
+                                    缓存
                                 </a>
                             
                             
@@ -1061,8 +1063,8 @@ hexo d    #部署到远程Github仓库
                         <span class="chip bg-color">学习笔记</span>
                     </a>
                     
-                    <a href="/tags/%E7%A7%92%E6%9D%80/">
-                        <span class="chip bg-color">秒杀</span>
+                    <a href="/tags/%E7%BC%93%E5%AD%98/">
+                        <span class="chip bg-color">缓存</span>
                     </a>
                     
                 </div>

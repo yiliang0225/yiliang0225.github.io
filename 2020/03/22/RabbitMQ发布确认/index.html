@@ -4,10 +4,14 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="秒杀系统, JAVA">
-    <meta name="description" content="一、设计库存预热：提前把商品添加到redis中，整个秒杀流程都在redis中操作，秒杀结束，在异步去修改库存。  
-用户下单：为了提升下单速度，将订单存放的redis中，用户支付后，再将订单存到mysql中，并清空redis中的订单。  
-">
+    <meta name="keywords" content="RabbitMQ发布确认, JAVA">
+    <meta name="description" content="消息确认机制(Confirm模式)前提条件
+通过信道将生产者设置队列持久化
+channel.queueDeclare(QUEUE_NAME,true,false,false,null);
+
+
+通过信道将生产者设置队列的消息持久化
+Messa">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -19,7 +23,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>秒杀系统 | 毅梁Blog</title>
+    <title>RabbitMQ发布确认 | 毅梁Blog</title>
     <link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/guixinchn/image/blog/favicon.png">
 
     <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.min.css">
@@ -216,12 +220,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/10.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/14.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">秒杀系统</h1>
+                    <h1 class="description center-align post-title">RabbitMQ发布确认</h1>
                 </div>
             </div>
         </div>
@@ -341,8 +345,8 @@
                                 <span class="chip bg-color">学习笔记</span>
                             </a>
                         
-                            <a href="/tags/%E7%A7%92%E6%9D%80/">
-                                <span class="chip bg-color">秒杀</span>
+                            <a href="/tags/RabbitMQ/">
+                                <span class="chip bg-color">RabbitMQ</span>
                             </a>
                         
                     </div>
@@ -353,8 +357,8 @@
                     <div class="post-cate">
                         <i class="fas fa-bookmark fa-fw icon-category"></i>
                         
-                            <a href="/categories/%E7%A7%92%E6%9D%80/" class="post-category">
-                                秒杀
+                            <a href="/categories/RabbitMQ/" class="post-category">
+                                RabbitMQ
                             </a>
                         
                     </div>
@@ -366,7 +370,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2020-10-10
+                    2020-03-22
                 </div>
                 
 
@@ -375,14 +379,14 @@
                 
                 <div class="info-break-policy">
                     <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
-                    1.2k
+                    901
                 </div>
                 
 
                 
                 <div class="info-break-policy">
                     <i class="far fa-clock fa-fw"></i>阅读时长:&nbsp;&nbsp;
-                    5 分
+                    4 分
                 </div>
                 
 
@@ -407,196 +411,201 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <h2 id="一、设计"><a href="#一、设计" class="headerlink" title="一、设计"></a>一、设计</h2><p>库存预热：<br>提前把商品添加到redis中，整个秒杀流程都在redis中操作，秒杀结束，在异步去修改库存。  </p>
-<p>用户下单：<br>为了提升下单速度，将订单存放的redis中，用户支付后，再将订单存到mysql中，并清空redis中的订单。  </p>
-<p>创建订单：<br>用户每次下单的时候，使用rabbitMQ创建一个队列，采用异步的方式创建订单，从rabbitMQ中读取信息，创建订单。  </p>
-<p>下单状态：<br>做一个页面的判断，每个1s查询下单状态。    </p>
-<p>超卖问题：<br>数据库添加唯一索引，减库存的时候先进行库存数量判断；用redis来维护库存，redis中的库存不足则秒杀失败；异步队列处理订单。  </p>
-<span id="more"></span>
-<h2 id="二、缓存"><a href="#二、缓存" class="headerlink" title="二、缓存"></a>二、缓存</h2><p>在高并发的情况下必然会遇到<strong>缓存雪崩</strong>、<strong>缓存击穿</strong>、<strong>缓存穿透</strong>等问题。而且秒杀是<strong>读多写少</strong>，使用redis作为缓存非常合适（为了避免redis服务器出问题，可以使用redis集群）。  </p>
-<h3 id="2-1、缓存穿透"><a href="#2-1、缓存穿透" class="headerlink" title="2.1、缓存穿透"></a>2.1、缓存穿透</h3><pre><code>描述：
-是指缓存和数据库中没有数据，而用户不断请求，会导致数据库压力过大
-解决方案：  
-1、在接口层校验，如果用户鉴权校验，id为基础校验，id&lt;=0的直接拦截
-2、从缓存取不到数据，在数据库中也没有取到，可以将key-value对写成key-null，将缓存有效时间可以设置短点，设置太长会导致无法正常使用。
+                <h2 id="消息确认机制-Confirm模式"><a href="#消息确认机制-Confirm模式" class="headerlink" title="消息确认机制(Confirm模式)"></a>消息确认机制(Confirm模式)</h2><h3 id="前提条件"><a href="#前提条件" class="headerlink" title="前提条件"></a>前提条件</h3><ul>
+<li><p><strong>通过信道将生产者设置队列持久化</strong></p>
+<pre><code>channel.queueDeclare(QUEUE_NAME,true,false,false,null);
 </code></pre>
-<h3 id="2-2、缓存击穿"><a href="#2-2、缓存击穿" class="headerlink" title="2.2、缓存击穿"></a>2.2、缓存击穿</h3><pre><code>描述：
-是指缓存中没有数据但是数据库中有数据（一般是缓存时间到期），这是由于并发用户特别多，同时读缓存没有读到数据，有同时去请求数据库，引起数据库压力瞬间增大。
-解决方案：
-1、设置热点永不过期
-2、加互斥锁
+</li>
+<li><p><strong>通过信道将生产者设置队列的消息持久化</strong></p>
+<pre><code>MessageProperties.PERSISTENT_TEXT_PLAIN(持久化)
+channel.basicPublish(exchange,queue, MessageProperties.PERSISTENT_TEXT_PLAIN,message);
 </code></pre>
-<pre><code>    public String getData(String key) throws InterruptedException {
-        // 创建锁
-        ReentrantLock reenLock = new ReentrantLock();
-        // 从缓存中读取数据
-        String result = getDataFromRedis(key);
-        // 缓存中不存在数据
-        if (result == null){
-            // 获取锁，获取成功去数据库中取数据
-            if (reenLock.tryLock()){
-                // 从数据库获取数据
-                result = getDataFromMysql(key);
-                // 更新缓存
-                if (result != null){
-                    setDataToCache(key,result);
-                }
-                // 释放锁
-                reenLock.unlock();
-            }else{
-                // 暂停一会，在重新去获取
-                Thread.sleep(100);
-                result = getData(key);
-            }
-        }
-        return result;
-    }
-</code></pre>
-<h3 id="2-3、缓存雪崩"><a href="#2-3、缓存雪崩" class="headerlink" title="2.3、缓存雪崩"></a>2.3、缓存雪崩</h3><pre><code>描述：
-是指缓存中数据大量到过期时间，而查询数据量巨大，引起数据库压力过大甚至宕机  
-解决方案：  
-1、缓存数据的过期时间设置随机，防止同一时间大量数据过期。  
-2、缓存数据库是分布式部署，将热点数据均匀分布不同缓存数据库中  
-3、设置热点数据永不过期
-</code></pre>
-<h2 id="三、削峰-x2F-限流"><a href="#三、削峰-x2F-限流" class="headerlink" title="三、削峰/限流"></a>三、削峰/限流</h2><p>秒杀流量在某一时刻非常高，让瞬间进来的流量进到一个缓存池，然后进行平缓处理（mq消息队列处理）。</p>
-<pre><code>@Configuration
-public class RabbitConfig {
-
-    private static final Logger logger = LoggerFactory.getLogger(RabbitConfig.class);
-    // 交换机
-    public final static String EXCHANGE_NAME = "order:mq:exchange";
-    // 队列
-    public final static String QUEUE_NAME = "order:mq:queue";
-    // 路由键
-    public final static String ROUTING_KEY = "order:mq:routing:key";
-
-
-
-    /**
-     * channel链接工厂
+</li>
+</ul>
+<h3 id="发布确认"><a href="#发布确认" class="headerlink" title="发布确认"></a>发布确认</h3><pre><code>    /**
+     * @author: yiLiang
+     * @Title: RabbitMQUtils
+     * 连接工厂创建信道
      */
-    @Autowired
-    private CachingConnectionFactory connectionFactory;
-
-    /**
-     * 监听器容器配置
-     */
-    @Autowired
-    private SimpleRabbitListenerContainerFactoryConfigurer factoryConfigurer;
-
-
-    /**
-     * 声明rabbittemplate
-     * @return
-     */
-    @Bean
-    public RabbitTemplate rabbitTemplate(){
-        //消息发送成功确认，对应application.properties中的spring.rabbitmq.publisher-confirms=true
-        connectionFactory.setPublisherConfirms(true);
-        //消息发送失败确认，对应application.properties中的spring.rabbitmq.publisher-returns=true
-        connectionFactory.setPublisherReturns(true);
-        RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
-        //设置消息发送格式为json
-        rabbitTemplate.setMessageConverter(new Jackson2JsonMessageConverter());
-        rabbitTemplate.setMandatory(true);
-        //消息发送到exchange回调 需设置：spring.rabbitmq.publisher-confirms=true
-        rabbitTemplate.setConfirmCallback(new RabbitTemplate.ConfirmCallback() {
-            @Override
-            public void confirm(CorrelationData correlationData, boolean ack, String cause) {
-                logger.info("消息发送成功:correlationData({}),ack({}),cause({})",correlationData,ack,cause);
-            }
-        });
-        //消息从exchange发送到queue失败回调  需设置：spring.rabbitmq.publisher-returns=true
-        rabbitTemplate.setReturnCallback(new RabbitTemplate.ReturnCallback() {
-            @Override
-            public void returnedMessage(Message message, int replyCode, String replyText, String exchange, String routingKey) {
-                logger.info("消息丢失:exchange({}),route({}),replyCode({}),replyText({}),message:{}",exchange,routingKey,replyCode,replyText,message);
-            }
-        });
-        return rabbitTemplate;
-    }
-
-    //---------------------------------------订单队列------------------------------------------------------
-
-    /**
-     * 声明订单队列的交换机
-     * @return
-     */
-    @Bean
-    public TopicExchange orderTopicExchange(){
-        //设置为持久化 不自动删除
-        return new TopicExchange(EXCHANGE_NAME,true,false);
-    }
-
-    /**
-     * 声明订单队列
-     * @return
-     */
-    @Bean
-    public Queue orderQueue(){
-        return new Queue(QUEUE_NAME,true);
-    }
-
-    /**
-     * 将队列绑定到交换机
-     * @return
-     */
-    @Bean
-    public Binding simpleBinding(){
-        return BindingBuilder.bind(orderQueue()).to(orderTopicExchange()).with(ROUTING_KEY);
-    }
-}
-</code></pre>
-<pre><code>    // 生产消息
-    public String send(String message){
-        rabbitTemplate.convertAndSend(RabbitConfig.EXCHANGE_NAME,RabbitConfig.ROUTING_KEY,message);
-        retuen "消息发送成功";
-    }
+    public class RabbitMQUtils {
     
+        // 队列的名称
+        public static final String QUEUE_NAME = "hello";
+        public static final String TASK_QUEUE_NAME = "ack_queue";
     
-
-    // 配置rabbitmq监听
-    /**
-     * 处理接收到的消息
-     * @param message 消息体
-     * @param channel 通道，确认消费用
-     */
-    @RabbitListener(queues = RabbitConfig.QUEUE_NAME)
-    public void onMessage(Message message, com.rabbitmq.client.Channel channel){
-        try{
-            //获取交付tag
-            long tag = message.getMessageProperties().getDeliveryTag();
-            String str = new String(message.getBody(),"utf-8");
-            logger.info("接收到的消息：{}",str);
-            //确认消费
-            channel.basicAck(tag,true);
-        }catch(Exception e){
-            logger.error("消息监听确认机制发生异常：",e.fillInStackTrace());
+        public static Channel getChannel(){
+            // 创建一个连接工厂
+            ConnectionFactory factory = new ConnectionFactory();
+            // 工厂IP 连接RabbitMQ的队列
+            factory.setHost("47.95.214.111");
+            // 设置用户名
+            factory.setUsername("guest");
+            // 密码
+            factory.setPassword("guest");
+    
+            // 创建连接
+            try {
+                Connection connection = factory.newConnection();
+                // 获取信道
+                Channel channel = connection.createChannel();
+                return channel;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
         }
     }
 </code></pre>
-<h3 id="并发配置"><a href="#并发配置" class="headerlink" title="并发配置"></a>并发配置</h3><pre><code>    /**
-       * 容器工厂配置 并发
-       * @return
+<pre><code>    // 模拟发送1000条消息
+    public static Integer MESSAGE_COUNT = 1000;
+</code></pre>
+<h4 id="单个确认"><a href="#单个确认" class="headerlink" title="单个确认"></a>单个确认</h4><pre><code>    /**
+       * 单个确认
+       * 1000条耗时大约 722ms(毫秒)
     */
-    @Bean("containerFactory")
-    public RabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory connectionFactory){
-        SimpleRabbitListenerContainerFactory listenerContainerFactory = new SimpleRabbitListenerContainerFactory();
-        listenerContainerFactory.setConnectionFactory(connectionFactory);
-        listenerContainerFactory.setMessageConverter(new Jackson2JsonMessageConverter());
-        // 最大并发数
-        listenerContainerFactory.setMaxConcurrentConsumers(20);
-        // 初始并发数
-        listenerContainerFactory.setConcurrentConsumers(10);
-        return listenerContainerFactory;
+    public static void publicMessageIndividually() throws Exception {
+        Channel channel = RabbitMQUtils.getChannel();
+        // 队列声明
+        String queueName = UUID.randomUUID().toString(); // 随机定义
+        channel.queueDeclare(queueName,true,false,false,null);
+        // 开启发布确认
+        channel.confirmSelect();
+        // 记录开始时间
+        long beginTime = System.currentTimeMillis();
+        for (Integer i = 0; i &lt; MESSAGE_COUNT; i++) {
+            String message = i + "";
+            // 发送消息
+            channel.basicPublish("",queueName,null,message.getBytes(StandardCharsets.UTF_8));
+            // 单个消息发布确认
+            boolean result = channel.waitForConfirms();
+            // result = true (发送成功)
+        }
+        // 记录结束时间
+        long endTime = System.currentTimeMillis();
+
+        System.out.println("发布耗时：" + (endTime-beginTime) + "ms(毫秒)");
+
     }
-    
-    
-    // containerFactory 指定容器工厂
-    
-    @RabbitListener(queues = RabbitConfig.QUEUE_NAME,containerFactory = "containerFactory")
-   
+</code></pre>
+<h4 id="批量确认"><a href="#批量确认" class="headerlink" title="批量确认"></a>批量确认</h4><pre><code>    /**
+       * 批量确认
+       * 1000条耗时大约 147ms(毫秒)
+    */
+    public static void publicMessageBatch() throws Exception{
+        Channel channel = RabbitMQUtils.getChannel();
+        // 队列声明
+        String queueName = UUID.randomUUID().toString(); // 随机定义
+        channel.queueDeclare(queueName,true,false,false,null);
+        // 开启发布确认
+        channel.confirmSelect();
+        // 记录开始时间
+        long beginTime = System.currentTimeMillis();
+
+        // 设置批量确认的长度
+        Integer batchSize = 100 ;
+
+        for (Integer i = 0; i &lt; MESSAGE_COUNT; i++) {
+            String message = i + "";
+            // 发送消息
+            channel.basicPublish("",queueName,null,message.getBytes(StandardCharsets.UTF_8));
+
+            // 判断达到 100 条消息时，批量确认一个
+            if (i%batchSize == 0){
+                // 发布确认
+                channel.waitForConfirms();
+            }
+        }
+        // 记录结束时间
+        long endTime = System.currentTimeMillis();
+        System.out.println("发布耗时：" + (endTime-beginTime) + "ms(毫秒)");
+
+    }
+</code></pre>
+<h4 id="异步确认"><a href="#异步确认" class="headerlink" title="异步确认"></a>异步确认</h4><pre><code>    /**
+       * 异步确认
+       * 1000条耗时大约 62ms(毫秒)
+    */
+    public static void publicMessageAsync()throws Exception{
+        Channel channel = RabbitMQUtils.getChannel();
+        // 队列声明
+        String queueName = UUID.randomUUID().toString(); // 随机定义
+        channel.queueDeclare(queueName,true,false,false,null);
+        // 开启发布确认
+        channel.confirmSelect();
+        // 记录开始时间
+        long beginTime = System.currentTimeMillis();
+
+
+        /**
+           * ConfirmCallback
+           * 参数详解
+                * 1.消息的标识
+                * 2.是否批量确认
+        */
+        // 消息确认成功 回调函数
+        ConfirmCallback ackCallback = (deliveryTag, multiple) -&gt; {
+
+        };
+        // 消息确认失败 回调函数
+        ConfirmCallback nackCallback = (deliveryTag, multiple) -&gt; {
+            System.out.println("未确认的消息："+ deliveryTag);
+        };
+        /**
+           * 参数详解
+                * 1.消息确认成功
+                * 2.消息确认失败
+        */
+        // 准备消息的监听器 （监听消息发送失败与否） {异步通知}
+        channel.addConfirmListener(ackCallback, nackCallback);
+
+        // 批量发布
+        for (Integer i = 0; i &lt; MESSAGE_COUNT; i++) {
+            String message = i + "";
+            // 发送消息
+            channel.basicPublish("",queueName,null,message.getBytes(StandardCharsets.UTF_8));
+
+        }
+
+        // 记录结束时间
+        long endTime = System.currentTimeMillis();
+        System.out.println("发布耗时：" + (endTime-beginTime) + "ms(毫秒)");
+    }
+</code></pre>
+<h3 id="处理异步未确认的消息"><a href="#处理异步未确认的消息" class="headerlink" title="处理异步未确认的消息"></a>处理异步未确认的消息</h3><pre><code>    /**
+       * 处理异步未确认消息
+    */
+    public static void ConcurrentLinkedQueue(){
+        // 将未确认消息放于一个基于内存的能被发布线下访问的队列
+        // ConcurrentLinkedQueue (并发链入式队列)
+
+        // 1.在发送消息时记录消息
+        // 2.在确认消息回调函数中删除确认的消息
+
+
+        // 在如上确认消息中的开启发布确认下添加
+        /**
+           * 线程安全有序的哈希表，适用于高并发的情况下
+           * &lt; 消息序号, 消息类型 &gt; ( &lt;key, value&gt; )
+                * 1.可以轻松的将序号与消息进行关联
+                * 2.轻松删除条码
+                * 3.支持高并发（多线程）
+        */
+        ConcurrentSkipListMap&lt;Long, String&gt; outstandingConfig = new ConcurrentSkipListMap&lt;&gt;();
+
+        // 记录消息
+        // outstandingConfig.put(channel.getNextPublishSeqNo(),message);
+
+        // 删除已经确认的消息
+            // 判断是否为批量确认消息
+        /*
+        if (multiple){
+            ConcurrentNavigableMap&lt;Long, String&gt; headMap = outstandingConfig.headMap(deliveryTag);
+            headMap.clear();
+        }else{
+            outstandingConfig.remove(deliveryTag);
+        }
+         */
+    }
 </code></pre>
 
                 
@@ -624,7 +633,7 @@ public class RabbitConfig {
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="http://example.com/2020/10/10/%E7%A7%92%E6%9D%80/">http://example.com/2020/10/10/%E7%A7%92%E6%9D%80/</a>
+                    <a href="http://example.com/2020/03/22/RabbitMQ%E5%8F%91%E5%B8%83%E7%A1%AE%E8%AE%A4/">http://example.com/2020/03/22/RabbitMQ%E5%8F%91%E5%B8%83%E7%A1%AE%E8%AE%A4/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -666,8 +675,8 @@ public class RabbitConfig {
                                     <span class="chip bg-color">学习笔记</span>
                                 </a>
                             
-                                <a href="/tags/%E7%A7%92%E6%9D%80/">
-                                    <span class="chip bg-color">秒杀</span>
+                                <a href="/tags/RabbitMQ/">
+                                    <span class="chip bg-color">RabbitMQ</span>
                                 </a>
                             
                         </div>
@@ -1119,54 +1128,6 @@ public class RabbitConfig {
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2021/03/10/Hexo%E5%8D%9A%E5%AE%A2%E6%90%AD%E5%BB%BA/">
-                    <div class="card-image">
-                        
-                        <img src="https://tse1-mm.cn.bing.net/th/id/R-C.1c5967becfe235d44defe968d7fadd59?rik=G91BNwdbYqmklA&riu=http%3a%2f%2fwww.962.net%2fup%2f2011-8%2f2011829263175.jpg&ehk=1NYDl9jj2PONaBFglQsSY%2bVWcxcttheXbHgzl6k93Xc%3d&risl=&pid=ImgRaw&r=0" class="responsive-img" alt="Hexo 博客搭建">
-                        
-                        <span class="card-title">Hexo 博客搭建</span>
-                    </div>
-                </a>
-                <div class="card-content article-content">
-                    <div class="summary block-with-text">
-                        
-                            
-                        
-                    </div>
-                    <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2021-03-10
-                        </span>
-                        <span class="publish-author">
-                            
-                            <i class="fas fa-bookmark fa-fw icon-category"></i>
-                            
-                            <a href="/categories/hexo/" class="post-category">
-                                    hexo
-                                </a>
-                            
-                            
-                        </span>
-                    </div>
-                </div>
-                
-                <div class="card-action article-tags">
-                    
-                    <a href="/tags/%E5%8D%9A%E5%AE%A2%E6%90%AD%E5%BB%BA/">
-                        <span class="chip bg-color">博客搭建</span>
-                    </a>
-                    
-                </div>
-                
-            </div>
-        </div>
-        
-        
-        <div class="article col s12 m6" data-aos="fade-up">
-            <div class="article-badge right-badge text-color">
-                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
-            </div>
-            <div class="card">
                 <a href="/2020/07/11/RabbitMQ%20%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E6%B6%88%E6%81%AF%E7%9A%84%E5%8F%AF%E9%9D%A0%E4%BC%A0%E8%BE%93/">
                     <div class="card-image">
                         
@@ -1183,8 +1144,61 @@ public class RabbitConfig {
                         
                     </div>
                     <div class="publish-info">
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2020-07-11
+                        </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/RabbitMQ/" class="post-category">
+                                    RabbitMQ
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="card-action article-tags">
+                    
+                    <a href="/tags/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
+                        <span class="chip bg-color">学习笔记</span>
+                    </a>
+                    
+                    <a href="/tags/RabbitMQ/">
+                        <span class="chip bg-color">RabbitMQ</span>
+                    </a>
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
+            <div class="card">
+                <a href="/2020/03/20/RabbitMQ%E7%9A%84%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="RabbitMQ的基本使用">
+                        
+                        <span class="card-title">RabbitMQ的基本使用</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
                             <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2020-07-11
+                                <i class="far fa-clock fa-fw icon-date"></i>2020-03-20
                             </span>
                         <span class="publish-author">
                             
@@ -1201,12 +1215,12 @@ public class RabbitConfig {
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/RabbitMQ/">
-                        <span class="chip bg-color">RabbitMQ</span>
-                    </a>
-                    
                     <a href="/tags/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
                         <span class="chip bg-color">学习笔记</span>
+                    </a>
+                    
+                    <a href="/tags/RabbitMQ/">
+                        <span class="chip bg-color">RabbitMQ</span>
                     </a>
                     
                 </div>
