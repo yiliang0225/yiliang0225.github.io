@@ -56,6 +56,33 @@
     
     
     <entry>
+      <title>线程</title>
+      <link href="/2021/03/25/%E7%BA%BF%E7%A8%8B/"/>
+      <url>/2021/03/25/%E7%BA%BF%E7%A8%8B/</url>
+      
+        <content type="html"><![CDATA[<h2 id="线程的实现方式"><a href="#线程的实现方式" class="headerlink" title="线程的实现方式"></a>线程的实现方式</h2><ul><li><strong>继承Thread类，重写run方法，通过start方法启动</strong></li><li><strong>实现Runnable接口，重写run方法</strong>（创建Thread对象，利用Thread对象来启动线程）</li><li><strong>实现Callable接口，重写call方法</strong></li></ul><h2 id="线程的定义"><a href="#线程的定义" class="headerlink" title="线程的定义"></a>线程的定义</h2><ul><li>顶级父类Thread</li></ul><pre><code>class MyThread extends Thread{ // 继承Thread    public void run(){ //  重写run方法        }}// 获取线程对象this.getName();// 设置线程对象的名字Thread t1 = new Thread();t1.setName();</code></pre><ul><li>Runnable接口</li></ul><pre><code>class MyRunnable implements Runnable{ // 实现Runnable接口    @Override    public void run(){ // 重写run方法    }   }// 创建自定义类对象MyRunnable mr= new MyRunnable(); Thread t = new Thread(mr);// 将其组为参数传递给Thread的构造函数t.start(); // 开启线程// 获取当前线程的对象Thread.currentThread().getName();// 设置线程对象的名字Thread.currentThread().setName();</code></pre><p>区别</p><ul><li>没有start()方法，只能通过Thread开启线程</li><li>一个Thread对应一个线程，不能多次开启</li><li>new Thread(); 可以多个相互独立</li></ul><h2 id="线程同步"><a href="#线程同步" class="headerlink" title="线程同步"></a>线程同步</h2><p>例如：银行取钱<br>银行存款有一百万【共同资源】，现在有十个人【多条线程】 同时来取钱，每个人都想取十万。每个人都直接修改这个【共同资源】的数据，一瞬间全部完全取款。结果银行存款【共同资源】剩下100-10=90万（因为瞬间还没等别人处理完，都拿到这个资源，并且去修改，所以每个人拿到的原始值都是100，算出的结果都是剩下90），每个人也都拿到钱，凭空生出了九十万，这明显是不对的，这是不安全的。</p><p>为了保证共同资源的安全，应该让他们一个一个的去使用这个资源，第一个取完剩下九十万，第二个取完剩下八十万…最终全部取万剩下零元。</p><h2 id="线程锁"><a href="#线程锁" class="headerlink" title="线程锁"></a>线程锁</h2><p>为了保证共享资源的安全，把资源<strong>加锁</strong>，有人在用的时候<strong>锁死</strong>，不用的时候<strong>开锁</strong></p><ul><li><p><strong>Synchronized</strong></p></li><li><ul><li>synchronized不需要用户去手动释放锁，当synchronized方法或者synchronized代码块执行完之后，系统会自动让线程释放对锁的占用</li></ul></li><li><p><strong>Lock</strong></p></li><li><ul><li>Lock则必须要用户去手动释放锁，如果没有主动释放锁，就有可能导致出现死锁现象</li></ul></li><li><p><strong>ReentrantLock类</strong> (可重入锁)</p></li><li><p><strong>ReadWriteLock接口</strong> (排它锁)</p></li><li><ul><li>具有完全互斥排他的效果，即同一时刻只允许一个线程访问</li></ul></li><li><p><strong>ReentrantReadWriteLock</strong></p></li><li><ul><li>ReentrantReadWriteLock实现了上面讲的ReadWriteLock接口</li></ul></li></ul>]]></content>
+      
+      
+      <categories>
+          
+          <category> 线程 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 学习笔记 </tag>
+            
+            <tag> 线程 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>Hexo 博客搭建</title>
       <link href="/2021/03/10/Hexo%E5%8D%9A%E5%AE%A2%E6%90%AD%E5%BB%BA/"/>
       <url>/2021/03/10/Hexo%E5%8D%9A%E5%AE%A2%E6%90%AD%E5%BB%BA/</url>
