@@ -4,6 +4,35 @@
   
     
     <entry>
+      <title>RabbitMQ集群搭建</title>
+      <link href="/2022/03/26/RabbitMQ%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/"/>
+      <url>/2022/03/26/RabbitMQ%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/</url>
+      
+        <content type="html"><![CDATA[<h2 id="LINUX-搭建集群"><a href="#LINUX-搭建集群" class="headerlink" title="LINUX 搭建集群"></a>LINUX 搭建集群</h2><p>修改每台机器的主机名称</p><pre><code>vi /etc/hostname </code></pre><p>在每台服务器中配置其他服务器 hosts文件，让各个节点都能互相识别对方</p><pre><code>vi /etc/hosts</code></pre><p>下图效果</p><p><img src="https://liang-git.oss-cn-beijing.aliyuncs.com/hexo/rabbitmq%E9%9B%86%E7%BE%A4%E9%85%8D%E7%BD%AE.png"></p><p>确保各个节点的cookie文件使用的是同一个值 {@node2[服务主机名称] }</p><pre><code>scp /var/ib/rabbitmq/.erlang.cookie root@node2:/ar/ib/rabbitmg/.erlang.cookie I</code></pre><p>启动RabbitMQ服务,顺带启动Erlang虚拟机和RbbitMQ应用服务</p><pre><code>rabbitmq-server -detached</code></pre><p>在其他主机执行</p><pre><code>rabbitmqctl stop_ app # 关闭服务  (rabbitmqctl stop会将Erlang 虚拟机关闭, rabbitmqct! stop. app只关闭RabbitMQ服务)rabbitmqctl reset # 重置rabbitmqctl join. _cluster rabbit@node1 #[主机名称] #加入到第一台主机中rabbitmqctl start, app(只启动应用服务)</code></pre><p>查看集群状态</p><pre><code>rabbitmqctl cluster_ status</code></pre><p>解除集群节点(node2和node3机器分别执行)【脱离集群】</p><pre><code>rabbitmqctl stop_ _apprabbitmqctl resetrabbitmqct! start_ apprabbitmgctl cluster_ statusrabbitmgctl forget. _cluster node rabbit@node2(node1机器上执行) # node1主机忘掉node2主机</code></pre><h2 id="DOCKER-搭建集群"><a href="#DOCKER-搭建集群" class="headerlink" title="DOCKER 搭建集群"></a>DOCKER 搭建集群</h2><p>版本为 <strong>rabbitmq:3.7-management</strong> </p><ul><li>执行以下命名创建docker镜像</li></ul><pre><code>docker run -d --hostname rabbitmq01 --name rabbitmqCluster01 -p 15672:15672 -p 5672:5672 -p 1883:1883 -e RABBITMQ_ERLANG_COOKIE='rabbitmqCookie' rabbitmq:3.7-managementdocker run -d --hostname rabbitmq02 --name rabbitmqCluster02 -p 15673:15672 -p 5673:5672 -p 1884:1883 -e RABBITMQ_ERLANG_COOKIE='rabbitmqCookie' --link rabbitmqCluster01:rabbitmq01 rabbitmq:3.7-managementdocker run -d --hostname rabbitmq03 --name rabbitmqCluster03 -p 15674:15672 -p 5674:5672 -p 1885:1883 -e RABBITMQ_ERLANG_COOKIE='rabbitmqCookie' --link rabbitmqCluster01:rabbitmq01 --link rabbitmqCluster02:rabbitmq02  rabbitmq:3.7-management</code></pre><p>主要参数：</p><ul><li>-p 15672:15672 management 界面管理访问端口</li><li>-p 5672:5672 amqp 访问端口</li><li>-p 1883:1883 mqtt访问端口  也可以把容器里的数据共享到宿主机上</li><li>-v /home/soft/rabbitmqcluster/rabbitmq01:/var/lib/rabbitmq</li><li>–link 容器之间连接<br>Erlang Cookie 值必须相同，也就是一个集群内 RABBITMQ_ERLANG_COOKIE 参数的值必须相同。因为 RabbitMQ 是用Erlang实现的，Erlang Cookie 相当于不同节点之间通讯的密钥，Erlang节点通过交换 Erlang Cookie 获得认证。</li></ul><p>容器节点加入集群</p><pre><code>进入第一个容器docker exec -it rabbitmqCluster01 bashrabbitmqctl stop_apprabbitmqctl resetrabbitmqctl start_appexit</code></pre><pre><code>进入第二个容器docker exec -it rabbitmqCluster02 bashrabbitmqctl stop_apprabbitmqctl reset加入集群rabbitmqctl join_cluster --ram rabbit@rabbitmq01rabbitmqctl start_appexit</code></pre><pre><code>进入第三个容器docker exec -it rabbitmqCluster03 bashrabbitmqctl stop_apprabbitmqctl reset加入集群rabbitmqctl join_cluster --ram rabbit@rabbitmq01rabbitmqctl start_appexit</code></pre><p>–ram 表示设置为内存节点，忽略此参数默认为磁盘节点。该配置启动了3个节点，1个磁盘节点和2个内存节点。</p><h3 id="镜像集群模式"><a href="#镜像集群模式" class="headerlink" title="镜像集群模式"></a>镜像集群模式</h3><h4 id="登录rabbitmq管理页面-——-gt-Admin-——-gt-Policies-——-gt-Add-x2F-update-a-policy"><a href="#登录rabbitmq管理页面-——-gt-Admin-——-gt-Policies-——-gt-Add-x2F-update-a-policy" class="headerlink" title="登录rabbitmq管理页面 ——> Admin ——> Policies ——> Add / update a policy"></a>登录rabbitmq管理页面 ——&gt; Admin ——&gt; Policies ——&gt; Add / update a policy</h4><p><img src="https://liang-git.oss-cn-beijing.aliyuncs.com/hexo/%E9%95%9C%E5%83%8F%E9%9B%86%E7%BE%A4%E6%A8%A1%E5%BC%8F.png"></p><h4 id="使用命令创建"><a href="#使用命令创建" class="headerlink" title="使用命令创建"></a>使用命令创建</h4><pre><code># 进入容器docker exec -it rabbitmqCluster01 bash# 创建策略rabbitmqctl set_policy ha-all "^" '{"ha-mode":"all"}'rabbitmqctl set_policy-p/ha-all"^"'{"ha-mode":"all"}'rabbitmqctl set_policy-p/ha-all"^message"'{"ha-mode":"all"}'# “^message” 这个规则要根据自己修改，这个是指同步“message”开头的队列名称，我们配置时使用的应用于所有队列，所以表达式为“^”     </code></pre><h2 id="最终效果"><a href="#最终效果" class="headerlink" title="最终效果"></a>最终效果</h2><p><img src="https://liang-git.oss-cn-beijing.aliyuncs.com/hexo/rabbitmq%E9%9B%86%E7%BE%A4.png"></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> RabbitMQ </category>
+          
+          <category> 集群搭建 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 学习笔记 </tag>
+            
+            <tag> RabbitMQ </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>支付宝支付接口</title>
       <link href="/2022/03/11/%E6%94%AF%E4%BB%98%E5%AE%9D%E6%94%AF%E4%BB%98%E6%8E%A5%E5%8F%A3/"/>
       <url>/2022/03/11/%E6%94%AF%E4%BB%98%E5%AE%9D%E6%94%AF%E4%BB%98%E6%8E%A5%E5%8F%A3/</url>

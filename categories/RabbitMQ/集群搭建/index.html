@@ -4,7 +4,7 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="分类: RabbitMQ, JAVA">
+    <meta name="keywords" content="分类: 集群搭建, JAVA">
     <meta name="description" content="本网站是个人兴趣爱好，总结分享经验，记录生活点滴的平台">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -17,7 +17,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>分类: RabbitMQ | 毅梁Blog</title>
+    <title>分类: 集群搭建 | 毅梁Blog</title>
     <link rel="icon" type="image/png" href="https://cdn.jsdelivr.net/gh/guixinchn/image/blog/favicon.png">
 
     <link rel="stylesheet" type="text/css" href="/libs/awesome/css/all.min.css">
@@ -295,7 +295,7 @@
                 
                 <a href="/categories/RabbitMQ/" title="RabbitMQ: 4">
                     <span class="chip center-align waves-effect waves-light
-                             chip-active "
+                             chip-default "
                             style="background-color: #D5F5E3;">RabbitMQ
                         <span class="tag-length">4</span>
                     </span>
@@ -331,7 +331,7 @@
                 
                 <a href="/categories/RabbitMQ/%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/" title="集群搭建: 1">
                     <span class="chip center-align waves-effect waves-light
-                             chip-default "
+                             chip-active "
                             style="background-color: #82E0AA;">集群搭建
                         <span class="tag-length">1</span>
                     </span>
@@ -388,166 +388,6 @@ vi /etc/hosts
                                 
                                 <a href="/categories/RabbitMQ/%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/" class="post-category">
                                     集群搭建
-                                </a>
-                                
-                                
-                            </span>
-                        </div>
-                    </div>
-
-                    
-                    <div class="card-action article-tags">
-                        
-                        <a href="/tags/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
-                            <span class="chip bg-color">学习笔记</span>
-                        </a>
-                        
-                        <a href="/tags/RabbitMQ/">
-                            <span class="chip bg-color">RabbitMQ</span>
-                        </a>
-                        
-                    </div>
-                    
-                </div>
-            </div>
-            
-            <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
-                <div class="card">
-                    <a href="/2020/07/11/RabbitMQ%20%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E6%B6%88%E6%81%AF%E7%9A%84%E5%8F%AF%E9%9D%A0%E4%BC%A0%E8%BE%93/">
-                        <div class="card-image tag-image">
-                            
-                            
-                            <img src="/medias/featureimages/0.jpg" class="responsive-img" alt="RabbitMQ 如何保证消息的可靠传输">
-                            
-                            <span class="card-title">RabbitMQ 如何保证消息的可靠传输</span>
-                        </div>
-                    </a>
-                    <div class="card-content article-content">
-                        <div class="summary block-with-text">
-                            
-                                可靠传输在RabbitMQ中，一个消息从产生到被消费大致会经过三个步骤，生产者生产消息，消息投递到RabbitMQ，RabbitMQ再将消息推送到消费者（或消费者拉取），最终消费者将这条消息成功消费。消息的可靠传输，就是确保消息能够百分百从
-                            
-                        </div>
-                        <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2020-07-11
-                            </span>
-                            <span class="publish-author">
-                                
-                                <i class="fas fa-bookmark fa-fw icon-category"></i>
-                                
-                                <a href="/categories/RabbitMQ/" class="post-category">
-                                    RabbitMQ
-                                </a>
-                                
-                                
-                            </span>
-                        </div>
-                    </div>
-
-                    
-                    <div class="card-action article-tags">
-                        
-                        <a href="/tags/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
-                            <span class="chip bg-color">学习笔记</span>
-                        </a>
-                        
-                        <a href="/tags/RabbitMQ/">
-                            <span class="chip bg-color">RabbitMQ</span>
-                        </a>
-                        
-                    </div>
-                    
-                </div>
-            </div>
-            
-            <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
-                <div class="card">
-                    <a href="/2020/03/22/RabbitMQ%E5%8F%91%E5%B8%83%E7%A1%AE%E8%AE%A4/">
-                        <div class="card-image tag-image">
-                            
-                            
-                            <img src="/medias/featureimages/14.jpg" class="responsive-img" alt="RabbitMQ发布确认">
-                            
-                            <span class="card-title">RabbitMQ发布确认</span>
-                        </div>
-                    </a>
-                    <div class="card-content article-content">
-                        <div class="summary block-with-text">
-                            
-                                消息确认机制(Confirm模式)前提条件
-通过信道将生产者设置队列持久化
-channel.queueDeclare(QUEUE_NAME,true,false,false,null);
-
-
-通过信道将生产者设置队列的消息持久化
-Messa
-                            
-                        </div>
-                        <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2020-03-22
-                            </span>
-                            <span class="publish-author">
-                                
-                                <i class="fas fa-bookmark fa-fw icon-category"></i>
-                                
-                                <a href="/categories/RabbitMQ/" class="post-category">
-                                    RabbitMQ
-                                </a>
-                                
-                                
-                            </span>
-                        </div>
-                    </div>
-
-                    
-                    <div class="card-action article-tags">
-                        
-                        <a href="/tags/%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0/">
-                            <span class="chip bg-color">学习笔记</span>
-                        </a>
-                        
-                        <a href="/tags/RabbitMQ/">
-                            <span class="chip bg-color">RabbitMQ</span>
-                        </a>
-                        
-                    </div>
-                    
-                </div>
-            </div>
-            
-            <div class="article tag-post col s12 m6 l4" data-aos="zoom-in">
-                <div class="card">
-                    <a href="/2020/03/20/RabbitMQ%E7%9A%84%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8/">
-                        <div class="card-image tag-image">
-                            
-                            
-                            <img src="/medias/featureimages/15.jpg" class="responsive-img" alt="RabbitMQ的基本使用">
-                            
-                            <span class="card-title">RabbitMQ的基本使用</span>
-                        </div>
-                    </a>
-                    <div class="card-content article-content">
-                        <div class="summary block-with-text">
-                            
-                                创建队列    // 队列名称
-    public static final String QUEUE_NAME = "hello";
-
-生产者// 发消息
-    public static void main(String[] arg
-                            
-                        </div>
-                        <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2020-03-20
-                            </span>
-                            <span class="publish-author">
-                                
-                                <i class="fas fa-bookmark fa-fw icon-category"></i>
-                                
-                                <a href="/categories/RabbitMQ/" class="post-category">
-                                    RabbitMQ
                                 </a>
                                 
                                 
