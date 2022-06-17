@@ -362,14 +362,14 @@ OkHttpClient是一个高效的HTTP客户端
                 
                 <div class="info-break-policy">
                     <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
-                    470
+                    1.1k
                 </div>
                 
 
                 
                 <div class="info-break-policy">
                     <i class="far fa-clock fa-fw"></i>阅读时长:&nbsp;&nbsp;
-                    2 分
+                    6 分
                 </div>
                 
 
@@ -411,108 +411,264 @@ OkHttpClient是一个高效的HTTP客户端
     &lt;/dependency&gt;
 </code></pre>
 <p><strong>简单使用</strong></p>
-<pre><code>public class OkHttpClientPost {
-    //json传输方式
-    private final static MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-    //获取okHttpClient对象
-    private final static OkHttpClient client = OkHttpClientObject.CLIENT
-            .getClientInstance();
+<pre><code>public class OkHttpClientUtil {
+    private static final String TYPE_JSON = "application/json; charset=utf-8";
+    private static final String TYPE_FORM = "application/data;";
+    private static final String TYPE_FORM_DATA = "multipart/form-data;";
+
+    /** 
+    * @Description: post-&gt;json
+    * @Param: [url, json]
+    * @return: java.lang.String
+    * @Date: 2022/4/27
+    */
+    public static String postJson(String url,String json){
+        RequestBody body = RequestBody.create(MediaType.parse(TYPE_JSON), json);
+        return post(url,TYPE_JSON,null,body);
+    }
+
+    /**
+     * @Description: post-&gt;json
+     * @Param: [url, headerMap, json]
+     * @return: java.lang.String
+     * @Date: 2022/4/27
+     */
+    public static String postJson(String url,Map&lt;String ,String&gt; headerMap,String json){
+        RequestBody body = RequestBody.create(MediaType.parse(TYPE_JSON), json);
+        return post(url,TYPE_JSON,headerMap,body);
+    }
+    /**
+     * @Description: post-&gt;form
+     * @Param: [url, headerMap, parametersBody]
+     * @return: java.lang.String
+     * @Date: 2022/4/27
+     */
+    public static String postForm(String url,Map&lt;String ,String&gt; headerMap,Map&lt;String,String&gt; parametersBody){
+        //请求体
+        MultipartBody.Builder bodybuilder = new MultipartBody.Builder();
+        if (!ObjectUtils.isEmpty(parametersBody)){
+            parametersBody.forEach(bodybuilder::addFormDataPart);
+        }
+        MultipartBody body = bodybuilder.build();
+        return post(url,TYPE_FORM,headerMap,body);
+    }
+
+    /**
+     * @Description: post-&gt;file
+     * @Param: [url, headerMap, parametersBody, fileMap]
+     * @return: java.lang.String
+     * @Date: 2022/4/27
+     */
+    public static String postFile(String url,Map&lt;String ,String&gt; headerMap,Map&lt;String,String&gt; parametersBody,Map&lt;String,MultipartFile&gt; fileMap){
+        //请求体
+        MultipartBody.Builder bodybuilder = new MultipartBody.Builder().setType(MultipartBody.FORM);
+        if (!ObjectUtils.isEmpty(parametersBody)){
+            parametersBody.forEach(bodybuilder::addFormDataPart);
+        }
+        //带文件
+        if (!ObjectUtils.isEmpty(fileMap)){
+            fileMap.forEach((k,v) -&gt;{
+                byte[] bytes = new byte[0];
+                try {
+                    bytes = v.getBytes();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                bodybuilder.addFormDataPart(k,v.getOriginalFilename(),RequestBody.create(MediaType.parse("image/*"), bytes));
+            });
+        }
+        MultipartBody body = bodybuilder.build();
+        return post(url,TYPE_FORM_DATA,headerMap,body);
+    }
+
+    /**
+     * @Description: patch-&gt;json
+     * @Param: [url, headerMap, json]
+     * @return: java.lang.String
+     * @Date: 2022/4/27
+     */
+    public static String patchJson(String url,Map&lt;String ,String&gt; headerMap,String json){
+        RequestBody body = RequestBody.create(MediaType.parse(TYPE_JSON), json);
+        return patch(url,TYPE_JSON,headerMap,body);
+    }
     
-    /**
-     * post形式
-     */
-     public static String post(String url, String message) throws IOException {
-        //请求体传输json格式的数据
-        RequestBody requestBody = RequestBody.create(JSON, message);
-        //创建请求
-        Request request = new Request.Builder()
-                .url(url)
-                //.header("User-Agent", "*****")
-                //.addHeader("Accept", "*****")
-                .post(requestBody)
-                .build();
- 
-        Call call = client.newCall(request);
-        okhttp3.Response response = call.execute();
- 
-        if (response.isSuccessful()) {
-            return response.body().string();
-        } else {
-            throw new IOException("Unexpected code " + response);
+    /** 
+    * @Description: get-&gt;base64
+    * @Param: [url, headerMap, parametersBody]
+    * @return: java.lang.String
+    * @Date: 2022/4/27
+    */
+    public static String getRespStream(String url,Map&lt;String ,String&gt; headerMap) {
+        //创建客户端
+        OkHttpClient client = new OkHttpClient().newBuilder().build();
+        //构建请求
+        Request.Builder reqBuild = new Request.Builder();
+        //请求头
+        if (!ObjectUtils.isEmpty(headerMap)) {
+            headerMap.forEach(reqBuild::addHeader);
         }
-    }
- 
- 
-    /**
-     * post形式  multipart
-     */
-    public static String postMultipartFormData(String url, Map&lt;String,String&gt; paramMap) throws IOException {
- 
- 
-        MultipartBody.Builder builder = new MultipartBody.Builder().setType(MultipartBody.FORM);
-        Set&lt;String&gt; keySet = paramMap.keySet();
-        //拼接请求参数
-        for (String key : keySet) {
-            if (key.equals("image_file")) {
-                String image_file = paramMap.get("image_file");
-                byte[] bytes = new BASE64Decoder().decodeBuffer(image_file);
-                RequestBody fileBody = RequestBody.create(MediaType.parse("image/png"), bytes);
-                builder.addFormDataPart("image_file", "image_file", fileBody);
-            } else {
-                builder.addFormDataPart(key, paramMap.get(key));
+        //组装请求参数
+        Request req = reqBuild.url(url).get().build();
+        //执行
+        Response response = null;
+        try {
+            response = client.newCall(req).execute();
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("发送http-getRespStream请求异常！" + e);
+        }
+        int code = response.code();
+        if (code != 200) {
+            String result = null;
+            try {
+                result = response.body().string();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
+            return result;
         }
-        MultipartBody body = builder.build();
-        //创建请求
-        Request request = new Request.Builder()
-                .url(url)
-                .method("POST", body)
-                .addHeader("Content-Type", "multipart/form-data")
-                .build();
- 
-        Call call = client.newCall(request);
-        okhttp3.Response response = call.execute();
-        if (response.isSuccessful()) {
-            return response.body().string();
-        } else {
- 
-             int code = response.code();
-             String message = response.message();
-             log.error("OCR识别 响应状态码：{}  错误信息：{}",code,message);
-            throw new IOException("Unexpected code " + response);
+        byte[] bytes = new byte[0];
+        try {
+            bytes = response.body().bytes();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+        //返回base64格式
+        String bytesStr = Base64.getEncoder().encodeToString(bytes);
+        Map&lt;String, String&gt; resultMap = new HashMap&lt;&gt;();
+        resultMap.put("code", "0");
+        resultMap.put("msg", "request success");
+        resultMap.put("data", bytesStr);
+        return JSON.toJSONString(resultMap);
     }
- 
- 
- 
- 
- 
- 
- 
     /**
-     * post形式
-     */
-    public static String postHeader(String url, String message,String header) throws IOException {
-        //请求体传输json格式的数据
-        RequestBody requestBody = RequestBody.create(JSON, message);
-        //创建请求
-        Request request = new Request.Builder()
-                .url(url)
-                .header("Authorization", header)
-                //.addHeader("Accept", "*****")
-                .post(requestBody)
-                .build();
- 
-        Call call = client.newCall(request);
-        okhttp3.Response response = call.execute();
- 
-        if (response.isSuccessful()) {
-            return response.body().string();
+    * @Description: 拼接参数
+    * @Param: [parametersBody]
+    * @return: java.lang.String
+    * @Date: 2022/4/27
+    */
+    public static String getNewUrl(String url ,Map&lt;String,String&gt; parametersBody) {
+        //遍历map中所有参数到builder
+        if (parametersBody != null &amp;&amp; parametersBody.size() &gt; 0) {
+            StringBuffer stringBuffer = new StringBuffer("?");
+            for (String key : parametersBody.keySet()) {
+                if (parametersBody.get(key) != null) {//如果参数不是null，就拼接起来
+                    stringBuffer.append("&amp;");
+                    stringBuffer.append(key);
+                    stringBuffer.append("=");
+                    stringBuffer.append(parametersBody.get(key));
+                }
+            }
+            url += stringBuffer.toString();
+            return url;
         } else {
-            throw new IOException("Unexpected code " + response);
+            return "";
         }
     }
- 
+
+    /**
+    * @Description: get
+    * @Param: [url, headerMap, parametersBody]
+    * @return: java.lang.String
+    * @Date: 2022/4/27
+    */
+    public static String get(String url,Map&lt;String ,String&gt; headerMap){
+        //创建客户端
+        OkHttpClient client = new OkHttpClient().newBuilder().build();
+        //构建请求
+        Request.Builder reqBuild = new Request.Builder();
+        //请求头
+        if (!ObjectUtils.isEmpty(headerMap)){
+            headerMap.forEach(reqBuild::addHeader);
+        }
+        //组装请求参数
+        Request req = reqBuild.url(url).get().build();
+        //执行
+        Response response = null;
+        try {
+            response = client.newCall(req).execute();
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("发送http-get请求异常！" + e);
+        }
+        //返回值
+        String result = "";
+        try {
+            result = response.body().string();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    /**
+    * @Description: post
+    * @Param: [url, contenType, headerMap, parametersBody, fileMap]
+    * @return: java.lang.String
+    * @Date: 2022/4/27
+    */
+    public static String post(String url ,String contenType, Map&lt;String ,String&gt; headerMap, RequestBody body){
+        //创建客户端
+        OkHttpClient client = new OkHttpClient().newBuilder().build();
+        //构建请求
+        Request.Builder reqBuild = new Request.Builder();
+        //请求头
+        reqBuild.addHeader("Content-Type",contenType);
+        if (!ObjectUtils.isEmpty(headerMap)){
+            headerMap.forEach(reqBuild::addHeader);
+        }
+        //组装请求参数
+        Request req = reqBuild.url(url).method("POST", body).build();
+        //执行
+        Response response = null;
+        try {
+            response = client.newCall(req).execute();
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException("发送http-post请求异常！" + e);
+        }
+        //返回值
+        String result = "";
+        try {
+            result = response.body().string();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    /**
+    * @Description: patch
+    * @Param: [url, contenType, headerMap, parametersBody]
+    * @return: java.lang.String
+    * @Date: 2022/4/27
+    */
+    public static String patch(String url ,String contenType, Map&lt;String ,String&gt; headerMap, RequestBody body){
+        OkHttpClient client = new OkHttpClient().newBuilder().build();
+        //构建请求
+        Request.Builder reqBuild = new Request.Builder();
+        //请求头
+        reqBuild.addHeader("Content-Type",contenType);
+        if (!ObjectUtils.isEmpty(headerMap)){
+            headerMap.forEach(reqBuild::addHeader);
+        }
+        //组装请求参数
+        Request req = reqBuild.url(url).method("PATCH", body).build();
+        //执行
+        Response response = null;
+        try {
+            response = client.newCall(req).execute();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        String result = null;
+        try {
+            result = response.body().string();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
 }
 </code></pre>
 
@@ -1024,18 +1180,17 @@ OkHttpClient是一个高效的HTTP客户端
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="far fa-dot-circle"></i>&nbsp;本篇
-            </div>
+                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2022/05/12/OkHttpClient/">
+                <a href="/2022/06/17/%E5%8E%8B%E7%BC%A9%E5%8C%85%E8%A7%A3%E5%8E%8Bzip-rar/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="OkHttpClient">
+                        <img src="/medias/featureimages/7.jpg" class="responsive-img" alt="压缩包解压zip&amp;rar">
                         
-                        <span class="card-title">OkHttpClient</span>
+                        <span class="card-title">压缩包解压zip&amp;rar</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -1045,18 +1200,33 @@ OkHttpClient是一个高效的HTTP客户端
                         
                     </div>
                     <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2022-05-12
-                            </span>
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2022-06-17
+                        </span>
                         <span class="publish-author">
                             
-                            <i class="fas fa-user fa-fw"></i>
-                            毅梁
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/zip/" class="post-category">
+                                    zip
+                                </a>
+                            
+                            <a href="/categories/zip/rar/" class="post-category">
+                                    rar
+                                </a>
+                            
                             
                         </span>
                     </div>
                 </div>
-
+                
+                <div class="card-action article-tags">
+                    
+                    <a href="/tags/%E5%8E%8B%E7%BC%A9%E5%8C%85%E8%A7%A3%E5%8E%8B/">
+                        <span class="chip bg-color">压缩包解压</span>
+                    </a>
+                    
+                </div>
                 
             </div>
         </div>
