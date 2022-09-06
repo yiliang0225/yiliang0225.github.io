@@ -6,7 +6,7 @@
   <link href="http://example.com/atom.xml" rel="self"/>
   
   <link href="http://example.com/"/>
-  <updated>2022-09-06T09:31:39.114Z</updated>
+  <updated>2022-09-06T09:34:56.481Z</updated>
   <id>http://example.com/</id>
   
   <author>
@@ -17,11 +17,11 @@
   <generator uri="https://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>Excel操作</title>
+    <title>EnumUtil</title>
     <link href="http://example.com/2022/09/06/enum/"/>
     <id>http://example.com/2022/09/06/enum/</id>
     <published>2022-09-06T08:53:00.000Z</published>
-    <updated>2022-09-06T09:31:39.114Z</updated>
+    <updated>2022-09-06T09:34:56.481Z</updated>
     
     
     <summary type="html">&lt;p&gt;枚举工具类，根据code信息获取枚举对象的value&lt;/p&gt;</summary>
