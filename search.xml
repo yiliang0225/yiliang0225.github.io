@@ -4,6 +4,33 @@
   
     
     <entry>
+      <title>MySQL索引</title>
+      <link href="/2022/09/18/Mysql%E7%B4%A2%E5%BC%95/"/>
+      <url>/2022/09/18/Mysql%E7%B4%A2%E5%BC%95/</url>
+      
+        <content type="html"><![CDATA[<span id="more"></span><h1 id="索引"><a href="#索引" class="headerlink" title="索引"></a>索引</h1><h2 id="MYSQL的索引类型"><a href="#MYSQL的索引类型" class="headerlink" title="MYSQL的索引类型"></a>MYSQL的索引类型</h2><ul><li>普通索引 INDEX</li><li>唯一索引 UNIQUE</li><li>主键索引</li><li>组合索引</li><li>全文索引</li></ul><h2 id="普通索引"><a href="#普通索引" class="headerlink" title="普通索引"></a>普通索引</h2><p>普通索引是最基本的索引，没用任何的限制。在创建的时候可以指定索引的长度。length 为可选参数，表示索引的长度（索引长度表示数组的元素个数），只有字符串类型的字段才能指定索引长度，如果是 BLOB 和 TEXT 类型，必须指定 length。</p><p>创建索引的时候需要注意：</p><ul><li>如果指定单列索引长度，length 必须小于这个字段所允许的最大字符个数。</li><li>查询索引：SHOW INDEX FROM table_name</li></ul><h3 id="直接创建索引"><a href="#直接创建索引" class="headerlink" title="直接创建索引"></a>直接创建索引</h3><p>CREATE INDEX index_name ON table(column(length))<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">示例</span><br><span class="line">给 student 表中的 name 创建一个索引，索引名称为 stu_name_index </span><br><span class="line">create index stu_name_index ON student(name)</span><br></pre></td></tr></table></figure></p><h3 id="修改表添加索引"><a href="#修改表添加索引" class="headerlink" title="修改表添加索引"></a>修改表添加索引</h3><p>ALTER TABLE table_name ADD INDEX index_name (column(length))<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">示例</span><br><span class="line">修改 student 表，为 class 列添加索引，索引名为 student_class_index</span><br><span class="line">alter table student add index student_class_index(class)</span><br></pre></td></tr></table></figure></p><h3 id="创建表时指定索引列"><a href="#创建表时指定索引列" class="headerlink" title="创建表时指定索引列"></a>创建表时指定索引列</h3><p>CREATE TABLE <code>table</code> (COLUMN TYPE ,PRIMARY KEY (<code>id</code>),INDEX index_name (column(length)))<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">示例</span><br><span class="line">创建 student 表，包含 student_id,name,class 列，同时为 name 列创建索引。索引名为 student_name_index</span><br><span class="line">create table student(student_id int primary key auto_increment,name varchar(30),class varchar(50),index student_name_index(name))</span><br></pre></td></tr></table></figure></p><h3 id="删除索引"><a href="#删除索引" class="headerlink" title="删除索引"></a>删除索引</h3><p>DROP INDEX index_name ON table<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">示例</span><br><span class="line">删除 student 表中索引名为 student_class_index 的索引</span><br><span class="line">drop index student_class_index on student</span><br></pre></td></tr></table></figure></p><h2 id="唯一索引"><a href="#唯一索引" class="headerlink" title="唯一索引"></a>唯一索引</h2><p>唯一索引与普通索引类似，不同的就是：索引列的值必须唯一，但允许有空值。</p><p>同上 ↑</p><h2 id="主键索引"><a href="#主键索引" class="headerlink" title="主键索引"></a>主键索引</h2><p>主键索引是一种特殊的唯一索引，一个表只能有一个主键，不允许有空值。一般是在建表的时候同时创建主键索引。<br>我们只需要给表添加主键约束,MySQL就会自动给列添加主键索引;</p><h3 id="添加主键索引"><a href="#添加主键索引" class="headerlink" title="添加主键索引"></a>添加主键索引</h3><p>ALTER TABLE 表名 ADD PRIMARY KEY(列名)<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">示例</span><br><span class="line">修改 student 表为 student_id 添加主键索引</span><br><span class="line">alter table student add primary key(student_id)</span><br></pre></td></tr></table></figure></p><h2 id="组合索引"><a href="#组合索引" class="headerlink" title="组合索引"></a>组合索引</h2><p>组合索引是指使用多个字段创建的索引，只有在查询条件中使用了创建索引时的第一个字段，索引才会被使用(最左前缀原则)。</p><h3 id="最左前缀原则"><a href="#最左前缀原则" class="headerlink" title="最左前缀原则"></a>最左前缀原则</h3><p>就是最左优先。<br>如：我们使用表中的 name，address，salary 创建组合索引，那么想要组合索引生效，<br>我们只能使用如下组合：<br>name/address/salary<br>name/address<br>name/<br>如果使用 addrees/salary 或者是 salary 则索引不会生效。</p><p>ALTER TABLE table_name ADD INDEX index_name (column(length),column(length))<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">示例</span><br><span class="line">修改 student 表，为 name，class 列创建组合索引</span><br><span class="line">alter table student add index student_index_n_c(name,class)</span><br></pre></td></tr></table></figure></p><h2 id="全文索引"><a href="#全文索引" class="headerlink" title="全文索引"></a>全文索引</h2><p>全文索引(FULLTEXT INDEX)主要用来查找文本中的关键字，而不是直接与索引中的值相比较。FULLTEXT 索引跟其它索引大不相同，它更像是一个搜索引擎，而不是简单的 where<br>语句的参数匹配。<br>FULLTEXT 索引配合 match against 操作使用，而不是一般的 where 语句加 like。<br>全文索引可以从 CHAR、VARCHAR 或 TEXT 列中作为 CREATE TABLE 语句的一部分被创建，或是随后使用 ALTER TABLE 添加。不过切记对于大容量的数据表，生成全文索<br>引是一个非常消耗时间非常消耗硬盘空间的做法。</p><h3 id="修改添加全文索引"><a href="#修改添加全文索引" class="headerlink" title="修改添加全文索引"></a>修改添加全文索引</h3><p>ALTER TABLE table_name ADD FULLTEXT index_name(clumn_name)<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">示例一</span><br><span class="line">修改 student 表添加 content 列类型为 TEXT</span><br><span class="line">alter table student add COLUMN content text;</span><br><span class="line"></span><br><span class="line">示例二</span><br><span class="line">修改 student 表，为 content 列创建全文索引</span><br><span class="line">alter table student add fulltext student_content_fullindex(content)</span><br></pre></td></tr></table></figure></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> MYSQL </category>
+          
+          <category> 索引 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> MYSQL </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>EnumUtil</title>
       <link href="/2022/09/06/enum/"/>
       <url>/2022/09/06/enum/</url>
@@ -21,33 +48,6 @@
         <tags>
             
             <tag> 多态 </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
-      <title>MySQL索引</title>
-      <link href="/2022/09/02/Mysql%E7%B4%A2%E5%BC%95/"/>
-      <url>/2022/09/02/Mysql%E7%B4%A2%E5%BC%95/</url>
-      
-        <content type="html"><![CDATA[<span id="more"></span><h1 id="索引"><a href="#索引" class="headerlink" title="索引"></a>索引</h1><h2 id="MYSQL的索引类型"><a href="#MYSQL的索引类型" class="headerlink" title="MYSQL的索引类型"></a>MYSQL的索引类型</h2><ul><li>普通索引 INDEX</li><li>唯一索引 UNIQUE</li><li>主键索引</li><li>组合索引</li><li>全文索引</li></ul><h2 id="普通索引"><a href="#普通索引" class="headerlink" title="普通索引"></a>普通索引</h2><p>普通索引是最基本的索引，没用任何的限制。在创建的时候可以指定索引的长度。length 为可选参数，表示索引的长度（索引长度表示数组的元素个数），只有字符串类型的字段才能指定索引长度，如果是 BLOB 和 TEXT 类型，必须指定 length。</p><p>创建索引的时候需要注意：</p><ul><li>如果指定单列索引长度，length 必须小于这个字段所允许的最大字符个数。</li><li>查询索引：SHOW INDEX FROM table_name</li></ul><h3 id="直接创建索引"><a href="#直接创建索引" class="headerlink" title="直接创建索引"></a>直接创建索引</h3><p>CREATE INDEX index_name ON table(column(length))<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">示例</span><br><span class="line">给 student 表中的 name 创建一个索引，索引名称为 stu_name_index </span><br><span class="line">create index stu_name_index ON student(name)</span><br></pre></td></tr></table></figure></p><h3 id="修改表添加索引"><a href="#修改表添加索引" class="headerlink" title="修改表添加索引"></a>修改表添加索引</h3><p>ALTER TABLE table_name ADD INDEX index_name (column(length))<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">示例</span><br><span class="line">修改 student 表，为 class 列添加索引，索引名为 student_class_index</span><br><span class="line">alter table student add index student_class_index(class)</span><br></pre></td></tr></table></figure></p><h3 id="创建表时指定索引列"><a href="#创建表时指定索引列" class="headerlink" title="创建表时指定索引列"></a>创建表时指定索引列</h3><p>CREATE TABLE <code>table</code> (COLUMN TYPE ,PRIMARY KEY (<code>id</code>),INDEX index_name (column(length)))<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">示例</span><br><span class="line">创建 student 表，包含 student_id,name,class 列，同时为 name 列创建索引。索引名为 student_name_index</span><br><span class="line">create table student(student_id int primary key auto_increment,name varchar(30),class varchar(50),index student_name_index(name))</span><br></pre></td></tr></table></figure></p><h3 id="删除索引"><a href="#删除索引" class="headerlink" title="删除索引"></a>删除索引</h3><p>DROP INDEX index_name ON table<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">示例</span><br><span class="line">删除 student 表中索引名为 student_class_index 的索引</span><br><span class="line">drop index student_class_index on student</span><br></pre></td></tr></table></figure></p><h2 id="唯一索引"><a href="#唯一索引" class="headerlink" title="唯一索引"></a>唯一索引</h2><p>唯一索引与普通索引类似，不同的就是：索引列的值必须唯一，但允许有空值。</p><p>同上 ↑</p><h2 id="主键索引"><a href="#主键索引" class="headerlink" title="主键索引"></a>主键索引</h2><p>主键索引是一种特殊的唯一索引，一个表只能有一个主键，不允许有空值。一般是在建表的时候同时创建主键索引。<br>我们只需要给表添加主键约束,MySQL就会自动给列添加主键索引;</p><h3 id="添加主键索引"><a href="#添加主键索引" class="headerlink" title="添加主键索引"></a>添加主键索引</h3><p>ALTER TABLE 表名 ADD PRIMARY KEY(列名)<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">示例</span><br><span class="line">修改 student 表为 student_id 添加主键索引</span><br><span class="line">alter table student add primary key(student_id)</span><br></pre></td></tr></table></figure></p><h2 id="组合索引"><a href="#组合索引" class="headerlink" title="组合索引"></a>组合索引</h2><p>组合索引是指使用多个字段创建的索引，只有在查询条件中使用了创建索引时的第一个字段，索引才会被使用(最左前缀原则)。</p><h3 id="最左前缀原则"><a href="#最左前缀原则" class="headerlink" title="最左前缀原则"></a>最左前缀原则</h3><p>就是最左优先。<br>如：我们使用表中的 name，address，salary 创建组合索引，那么想要组合索引生效，<br>我们只能使用如下组合：<br>name/address/salary<br>name/address<br>name/<br>如果使用 addrees/salary 或者是 salary 则索引不会生效。</p><p>ALTER TABLE table_name ADD INDEX index_name (column(length),column(length))<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">示例</span><br><span class="line">修改 student 表，为 name，class 列创建组合索引</span><br><span class="line">alter table student add index student_index_n_c(name,class)</span><br></pre></td></tr></table></figure></p><h2 id="全文索引"><a href="#全文索引" class="headerlink" title="全文索引"></a>全文索引</h2><p>全文索引(FULLTEXT INDEX)主要用来查找文本中的关键字，而不是直接与索引中的值相比较。FULLTEXT 索引跟其它索引大不相同，它更像是一个搜索引擎，而不是简单的 where<br>语句的参数匹配。<br>FULLTEXT 索引配合 match against 操作使用，而不是一般的 where 语句加 like。<br>全文索引可以从 CHAR、VARCHAR 或 TEXT 列中作为 CREATE TABLE 语句的一部分被创建，或是随后使用 ALTER TABLE 添加。不过切记对于大容量的数据表，生成全文索<br>引是一个非常消耗时间非常消耗硬盘空间的做法。</p><h3 id="修改添加全文索引"><a href="#修改添加全文索引" class="headerlink" title="修改添加全文索引"></a>修改添加全文索引</h3><p>ALTER TABLE table_name ADD FULLTEXT index_name(clumn_name)<br><figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">示例一</span><br><span class="line">修改 student 表添加 content 列类型为 TEXT</span><br><span class="line">alter table student add COLUMN content text;</span><br><span class="line"></span><br><span class="line">示例二</span><br><span class="line">修改 student 表，为 content 列创建全文索引</span><br><span class="line">alter table student add fulltext student_content_fullindex(content)</span><br></pre></td></tr></table></figure></p>]]></content>
-      
-      
-      <categories>
-          
-          <category> MYSQL </category>
-          
-          <category> 索引 </category>
-          
-      </categories>
-      
-      
-        <tags>
-            
-            <tag> MYSQL </tag>
             
         </tags>
       
